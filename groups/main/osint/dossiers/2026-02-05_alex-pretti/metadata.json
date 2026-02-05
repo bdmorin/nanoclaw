@@ -1,0 +1,16 @@
+{
+  "id": "2026-02-05_alex-pretti",
+  "subject": "Alex Jeffrey Pretti",
+  "type": "incident",
+  "created": "2026-02-05T02:30:00Z",
+  "updated": "2026-02-05T02:44:00Z",
+  "status": "active",
+  "confidence": "high",
+  "tags": ["legal", "minnesota", "minneapolis", "ice", "federal-agents", "shooting", "homicide", "doj-investigation", "civil-rights"],
+  "summary": "Fatal shooting of ICU nurse by CBP agents during immigration operation - January 24, 2026",
+  "sources_count": 17,
+  "related_subjects": ["Renee Good", "Operation Metro Surge"],
+  "investigations": ["DOJ Civil Rights Division", "Minnesota BCA"],
+  "location": "Minneapolis, Minnesota, USA",
+  "date_of_incident": "2026-01-24"
+}

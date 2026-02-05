@@ -1,6 +1,2 @@
-# OSINT research on individuals - sensitive, don't commit
-# Keep templates and docs, ignore actual dossiers
-osint/dossiers/20*
-
 # Conversation archives - personal
 conversations/
