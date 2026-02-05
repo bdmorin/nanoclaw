@@ -13,4 +13,7 @@ When you encounter an error and solve it, add the pattern here so you don't repe
 
 ## Lessons
 
-(Add entries as you encounter and solve problems)
+### Spawned processes hang waiting for stdin
+**Error**: `fabric --listpatterns` hung indefinitely when spawned via Node.js `spawn()`. Process was waiting on `unix_stream_read_generic`.
+**Fix**: Call `proc.stdin.end()` immediately after spawning if the process doesn't need stdin input.
+**Prevention**: Always close stdin for spawned processes that don't require input. Add timeouts as a safety net.
