@@ -7,6 +7,7 @@ import { createSdkMcpServer, tool } from '@anthropic-ai/claude-agent-sdk';
 import { z } from 'zod';
 import fs from 'fs';
 import path from 'path';
+import { spawn } from 'child_process';
 import { CronExpressionParser } from 'cron-parser';
 
 const IPC_DIR = '/workspace/ipc';
@@ -314,6 +315,195 @@ Use available_groups.json to find the JID for a group. The folder name should be
               text: `Group "${args.name}" registered. It will start receiving messages immediately.`
             }]
           };
+        }
+      ),
+
+      tool(
+        'fabric_youtube',
+        `Extract insights from a YouTube video using fabric AI patterns.
+
+Available patterns for YouTube:
+- extract_wisdom: Key ideas, insights, quotes, habits, facts, recommendations (default)
+- youtube_summary: Timestamped summary with key points
+- summarize: Concise summary with main points and takeaways
+- extract_ideas: Just the main ideas
+- extract_insights: Refined, abstracted insights
+
+The tool fetches the transcript and runs the specified pattern through Claude.`,
+        {
+          url: z.string().describe('YouTube video URL'),
+          pattern: z.enum([
+            'extract_wisdom',
+            'youtube_summary',
+            'summarize',
+            'extract_ideas',
+            'extract_insights'
+          ]).default('extract_wisdom').describe('Fabric pattern to apply')
+        },
+        async (args) => {
+          return new Promise((resolve) => {
+            const fabricArgs = [
+              '-y', args.url,
+              '--pattern', args.pattern
+            ];
+
+            const proc = spawn('fabric', fabricArgs, {
+              env: { ...process.env, HOME: '/home/node' }
+            });
+
+            // Close stdin - YouTube mode doesn't need input
+            proc.stdin.end();
+
+            let stdout = '';
+            let stderr = '';
+
+            proc.stdout.on('data', (data) => { stdout += data.toString(); });
+            proc.stderr.on('data', (data) => { stderr += data.toString(); });
+
+            proc.on('close', (code) => {
+              if (code !== 0) {
+                resolve({
+                  content: [{ type: 'text', text: `Fabric error (exit ${code}): ${stderr.slice(-500)}` }],
+                  isError: true
+                });
+              } else {
+                resolve({
+                  content: [{ type: 'text', text: stdout }]
+                });
+              }
+            });
+
+            proc.on('error', (err) => {
+              resolve({
+                content: [{ type: 'text', text: `Failed to run fabric: ${err.message}` }],
+                isError: true
+              });
+            });
+
+            // Timeout after 5 minutes (YouTube transcripts can be long)
+            setTimeout(() => {
+              proc.kill();
+              resolve({
+                content: [{ type: 'text', text: 'Fabric timed out after 5 minutes' }],
+                isError: true
+              });
+            }, 300000);
+          });
+        }
+      ),
+
+      tool(
+        'fabric_pattern',
+        `Run a fabric AI pattern on text input. Fabric has 237 patterns for various tasks.
+
+Popular patterns:
+- summarize: Concise summary with main points
+- extract_wisdom: Ideas, insights, quotes, recommendations
+- analyze_claims: Evaluate claims for truth/bias
+- extract_ideas: Pull out main ideas
+- create_summary: Alternative summarization
+- analyze_paper: Academic paper analysis
+- explain_code: Code explanation
+
+Run 'fabric --listpatterns' equivalent to see all available patterns.`,
+        {
+          pattern: z.string().describe('Fabric pattern name (e.g., "summarize", "extract_wisdom")'),
+          input: z.string().describe('Text content to process')
+        },
+        async (args) => {
+          return new Promise((resolve) => {
+            const proc = spawn('fabric', ['--pattern', args.pattern], {
+              env: { ...process.env, HOME: '/home/node' }
+            });
+
+            let stdout = '';
+            let stderr = '';
+
+            // Send input via stdin
+            proc.stdin.write(args.input);
+            proc.stdin.end();
+
+            proc.stdout.on('data', (data) => { stdout += data.toString(); });
+            proc.stderr.on('data', (data) => { stderr += data.toString(); });
+
+            proc.on('close', (code) => {
+              if (code !== 0) {
+                resolve({
+                  content: [{ type: 'text', text: `Fabric error (exit ${code}): ${stderr.slice(-500)}` }],
+                  isError: true
+                });
+              } else {
+                resolve({
+                  content: [{ type: 'text', text: stdout }]
+                });
+              }
+            });
+
+            proc.on('error', (err) => {
+              resolve({
+                content: [{ type: 'text', text: `Failed to run fabric: ${err.message}` }],
+                isError: true
+              });
+            });
+
+            // Timeout after 3 minutes
+            setTimeout(() => {
+              proc.kill();
+              resolve({
+                content: [{ type: 'text', text: 'Fabric timed out after 3 minutes' }],
+                isError: true
+              });
+            }, 180000);
+          });
+        }
+      ),
+
+      tool(
+        'fabric_list_patterns',
+        'List all available fabric patterns. Use this to discover what patterns are available.',
+        {},
+        async () => {
+          return new Promise((resolve) => {
+            const proc = spawn('fabric', ['--listpatterns'], {
+              env: { ...process.env, HOME: '/home/node' }
+            });
+
+            // Close stdin immediately - fabric doesn't need input for --listpatterns
+            proc.stdin.end();
+
+            let stdout = '';
+
+            proc.stdout.on('data', (data) => { stdout += data.toString(); });
+
+            proc.on('close', (code) => {
+              if (code !== 0) {
+                resolve({
+                  content: [{ type: 'text', text: 'Failed to list patterns' }],
+                  isError: true
+                });
+              } else {
+                resolve({
+                  content: [{ type: 'text', text: `Available patterns:\n${stdout}` }]
+                });
+              }
+            });
+
+            proc.on('error', (err) => {
+              resolve({
+                content: [{ type: 'text', text: `Failed to run fabric: ${err.message}` }],
+                isError: true
+              });
+            });
+
+            // Timeout after 30 seconds
+            setTimeout(() => {
+              proc.kill();
+              resolve({
+                content: [{ type: 'text', text: 'Fabric timed out listing patterns' }],
+                isError: true
+              });
+            }, 30000);
+          });
         }
       )
     ]

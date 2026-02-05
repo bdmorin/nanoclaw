@@ -179,6 +179,16 @@ function buildVolumeMounts(
     });
   }
 
+  // Fabric AI config directory (patterns, API keys, etc.)
+  const fabricDir = path.join(homeDir, '.config', 'fabric');
+  if (fs.existsSync(fabricDir)) {
+    mounts.push({
+      hostPath: fabricDir,
+      containerPath: '/home/node/.config/fabric',
+      readonly: true, // Patterns and config are read-only
+    });
+  }
+
   // Additional mounts validated against external allowlist (tamper-proof from containers)
   if (group.containerConfig?.additionalMounts) {
     const validatedMounts = validateAdditionalMounts(
@@ -292,7 +302,12 @@ export async function runContainerAgent(
       const chunk = data.toString();
       const lines = chunk.trim().split('\n');
       for (const line of lines) {
-        if (line) logger.debug({ container: group.folder }, line);
+        // Log SDK events at INFO level for dashboard visibility
+        if (line && line.includes('[SDK]')) {
+          logger.info({ container: group.folder }, line);
+        } else if (line) {
+          logger.debug({ container: group.folder }, line);
+        }
       }
       if (stderrTruncated) return;
       const remaining = CONTAINER_MAX_OUTPUT_SIZE - stderr.length;
