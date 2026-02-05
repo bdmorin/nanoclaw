@@ -18,6 +18,8 @@ These files contain critical context that persists across sessions. Read them fi
 - Send messages back to the chat
 - Read and send emails via Gmail
 - Conduct OSINT research (see below)
+- Track research projects with beads (see below)
+- Analyze content with fabric AI patterns (see below)
 
 ## OSINT (Open Source Intelligence)
 
@@ -109,6 +111,36 @@ For text content, use `fabric_pattern` with any pattern name:
 - `explain_code` - Code explanation
 
 Run `fabric_list_patterns` to see all available patterns.
+
+## Research Tracking (Beads)
+
+Track research projects and long-running tasks using the beads issue tracker.
+
+**Your scope**: `research-*` issues only (dev issues are `nanoclaw-*`)
+
+```bash
+# List your research issues
+./skills/beads/list.sh
+./skills/beads/list.sh open       # Filter by status
+
+# Create a new research issue
+./skills/beads/create.sh "Research topic" "Description of what to investigate"
+
+# Update status
+./skills/beads/update.sh research-abc in_progress
+./skills/beads/update.sh research-abc completed "Dossier at osint/dossiers/..."
+
+# Show issue details
+./skills/beads/show.sh research-abc
+```
+
+**Workflow:**
+1. User asks for research → Create issue
+2. Start working → Update to `in_progress`
+3. Create dossier → Link in description
+4. Complete → Update to `completed`
+
+See: `skills/beads/README.md` for full documentation.
 
 ---
 
