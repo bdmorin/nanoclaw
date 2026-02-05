@@ -25,6 +25,7 @@ fi
 
 echo "Creating dossier: $DOSSIER_ID"
 mkdir -p "$DOSSIER_PATH/media"
+mkdir -p "$DOSSIER_PATH/analysis"
 
 # Create metadata.json
 cat > "$DOSSIER_PATH/metadata.json" <<EOF
@@ -128,8 +129,10 @@ echo "  - metadata.json"
 echo "  - report.md"
 echo "  - sources.md"
 echo "  - media/ (directory)"
+echo "  - analysis/ (directory)"
 echo ""
 echo "Next steps:"
 echo "  1. Edit $DOSSIER_PATH/report.md"
 echo "  2. Add sources to $DOSSIER_PATH/sources.md"
-echo "  3. Update metadata.json when complete"
+echo "  3. Run fabric analysis: ./osint/scripts/analyze-dossier.sh $DOSSIER_PATH"
+echo "  4. Update metadata.json when complete"
