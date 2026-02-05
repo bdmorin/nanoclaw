@@ -258,9 +258,32 @@ async function main(): Promise<void> {
         }
       }
     })) {
-      if (message.type === 'system' && message.subtype === 'init') {
-        newSessionId = message.session_id;
-        log(`Session initialized: ${newSessionId}`);
+      // Log SDK events for dashboard visibility
+      const msg = message as Record<string, unknown>;
+
+      if (msg.type === 'system' && msg.subtype === 'init') {
+        newSessionId = msg.session_id as string;
+        log(`[SDK] Session: ${newSessionId}`);
+      } else if (msg.type === 'assistant') {
+        // Claude is responding
+        const content = msg.message as { content?: Array<{ type: string; text?: string; name?: string }> };
+        if (content?.content) {
+          for (const block of content.content) {
+            if (block.type === 'text' && block.text) {
+              const preview = block.text.slice(0, 100).replace(/\n/g, ' ');
+              log(`[SDK] 💬 Assistant: ${preview}${block.text.length > 100 ? '...' : ''}`);
+            } else if (block.type === 'tool_use' && block.name) {
+              log(`[SDK] 🔧 Tool call: ${block.name}`);
+            }
+          }
+        }
+      } else if (msg.type === 'tool_result') {
+        const toolName = msg.tool_name || 'unknown';
+        const isError = msg.is_error;
+        log(`[SDK] ${isError ? '❌' : '✅'} Tool result: ${toolName}`);
+      } else if (msg.type === 'progress') {
+        // Progress updates (thinking, etc)
+        log(`[SDK] ⏳ ${msg.message || 'Working...'}`);
       }
 
       if ('result' in message && message.result) {

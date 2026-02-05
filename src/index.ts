@@ -53,6 +53,7 @@ import { startSchedulerLoop } from './task-scheduler.js';
 import { NewMessage, RegisteredGroup, Session } from './types.js';
 import { loadJson, saveJson } from './utils.js';
 import { logger } from './logger.js';
+import { dashboardEvents, startDashboard } from './dashboard.js';
 
 const GROUP_SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -229,8 +230,18 @@ async function processMessage(msg: NewMessage): Promise<void> {
     'Processing message',
   );
 
+  // Emit dashboard event
+  dashboardEvents.emit('message_in', {
+    sender: msg.sender_name,
+    group: group.name,
+    content: content.slice(0, 200),
+  });
+
   await setTyping(msg.chat_jid, true);
+  const startTime = Date.now();
+  dashboardEvents.emit('agent_start', { group: group.name });
   const response = await runAgent(group, prompt, msg.chat_jid);
+  dashboardEvents.emit('agent_done', { group: group.name, duration: Date.now() - startTime });
   await setTyping(msg.chat_jid, false);
 
   if (response) {
@@ -303,6 +314,7 @@ async function runAgent(
 
 async function sendMessage(jid: string, text: string): Promise<void> {
   try {
+    const group = registeredGroups[jid];
     if (isDiscordJid(jid)) {
       await sendDiscordMessage(jid, text);
     } else if (sock) {
@@ -311,8 +323,14 @@ async function sendMessage(jid: string, text: string): Promise<void> {
     } else {
       logger.error({ jid }, 'No channel available to send message');
     }
+    // Emit dashboard event
+    dashboardEvents.emit('message_out', {
+      group: group?.name || jid,
+      content: text.slice(0, 200),
+    });
   } catch (err) {
     logger.error({ jid, err }, 'Failed to send message');
+    dashboardEvents.emit('error', { error: String(err) });
   }
 }
 
@@ -1006,6 +1024,9 @@ async function main(): Promise<void> {
   initDatabase();
   logger.info('Database initialized');
   loadState();
+
+  // Start dashboard server
+  startDashboard();
 
   const channelsEnabled: string[] = [];
 
