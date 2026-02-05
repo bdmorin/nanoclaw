@@ -21,3 +21,4 @@ logs/
 .vscode/
 
 agents-sdk-docs
+bdmorin-client_secret_*.json

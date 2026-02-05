@@ -1,4 +1,6 @@
-import { exec, execSync } from 'child_process';
+import 'dotenv/config';
+
+import { exec, execSync, spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
@@ -12,13 +14,22 @@ import makeWASocket, {
 import {
   ASSISTANT_NAME,
   DATA_DIR,
+  DISCORD_BOT_TOKEN,
+  DISCORD_ENABLED,
   IPC_POLL_INTERVAL,
   MAIN_GROUP_FOLDER,
   POLL_INTERVAL,
   STORE_DIR,
   TIMEZONE,
   TRIGGER_PATTERN,
+  WHATSAPP_ENABLED,
 } from './config.js';
+import {
+  connectDiscord,
+  isDiscordJid,
+  sendDiscordMessage,
+  setDiscordTyping,
+} from './discord-client.js';
 import {
   AvailableGroup,
   runContainerAgent,
@@ -74,7 +85,11 @@ function translateJid(jid: string): string {
 
 async function setTyping(jid: string, isTyping: boolean): Promise<void> {
   try {
-    await sock.sendPresenceUpdate(isTyping ? 'composing' : 'paused', jid);
+    if (isDiscordJid(jid)) {
+      await setDiscordTyping(jid, isTyping);
+    } else if (sock) {
+      await sock.sendPresenceUpdate(isTyping ? 'composing' : 'paused', jid);
+    }
   } catch (err) {
     logger.debug({ jid, err }, 'Failed to update typing status');
   }
@@ -288,8 +303,14 @@ async function runAgent(
 
 async function sendMessage(jid: string, text: string): Promise<void> {
   try {
-    await sock.sendMessage(jid, { text });
-    logger.info({ jid, length: text.length }, 'Message sent');
+    if (isDiscordJid(jid)) {
+      await sendDiscordMessage(jid, text);
+    } else if (sock) {
+      await sock.sendMessage(jid, { text });
+      logger.info({ jid, length: text.length }, 'Message sent');
+    } else {
+      logger.error({ jid }, 'No channel available to send message');
+    }
   } catch (err) {
     logger.error({ jid, err }, 'Failed to send message');
   }
@@ -794,43 +815,189 @@ async function startMessageLoop(): Promise<void> {
   }
 }
 
+function detectContainerRuntime(): 'docker' | 'container' {
+  const dockerCheck = spawnSync('docker', ['info'], { stdio: 'pipe' });
+  if (dockerCheck.status === 0) {
+    return 'docker';
+  }
+  const containerCheck = spawnSync('which', ['container'], { stdio: 'pipe' });
+  if (containerCheck.status === 0) {
+    return 'container';
+  }
+  return 'docker';
+}
+
 function ensureContainerSystemRunning(): void {
-  try {
-    execSync('container system status', { stdio: 'pipe' });
-    logger.debug('Apple Container system already running');
-  } catch {
-    logger.info('Starting Apple Container system...');
+  const runtime = detectContainerRuntime();
+
+  if (runtime === 'docker') {
+    // Docker: just verify it's running
     try {
-      execSync('container system start', { stdio: 'pipe', timeout: 30000 });
-      logger.info('Apple Container system started');
-    } catch (err) {
-      logger.error({ err }, 'Failed to start Apple Container system');
+      execSync('docker info', { stdio: 'pipe' });
+      logger.debug('Docker is running');
+    } catch {
+      logger.error('Docker is not running');
       console.error(
         '\n╔════════════════════════════════════════════════════════════════╗',
       );
       console.error(
-        '║  FATAL: Apple Container system failed to start                 ║',
+        '║  FATAL: Docker is not running                                  ║',
       );
       console.error(
         '║                                                                ║',
       );
       console.error(
-        '║  Agents cannot run without Apple Container. To fix:           ║',
+        '║  Start Docker and try again:                                  ║',
       );
       console.error(
-        '║  1. Install from: https://github.com/apple/container/releases ║',
-      );
-      console.error(
-        '║  2. Run: container system start                               ║',
-      );
-      console.error(
-        '║  3. Restart NanoClaw                                          ║',
+        '║    sudo systemctl start docker                                ║',
       );
       console.error(
         '╚════════════════════════════════════════════════════════════════╝\n',
       );
-      throw new Error('Apple Container system is required but failed to start');
+      throw new Error('Docker is required but not running');
     }
+  } else {
+    // Apple Container
+    try {
+      execSync('container system status', { stdio: 'pipe' });
+      logger.debug('Apple Container system already running');
+    } catch {
+      logger.info('Starting Apple Container system...');
+      try {
+        execSync('container system start', { stdio: 'pipe', timeout: 30000 });
+        logger.info('Apple Container system started');
+      } catch (err) {
+        logger.error({ err }, 'Failed to start Apple Container system');
+        console.error(
+          '\n╔════════════════════════════════════════════════════════════════╗',
+        );
+        console.error(
+          '║  FATAL: Apple Container system failed to start                 ║',
+        );
+        console.error(
+          '║                                                                ║',
+        );
+        console.error(
+          '║  Agents cannot run without Apple Container. To fix:           ║',
+        );
+        console.error(
+          '║  1. Install from: https://github.com/apple/container/releases ║',
+        );
+        console.error(
+          '║  2. Run: container system start                               ║',
+        );
+        console.error(
+          '║  3. Restart NanoClaw                                          ║',
+        );
+        console.error(
+          '╚════════════════════════════════════════════════════════════════╝\n',
+        );
+        throw new Error(
+          'Apple Container system is required but failed to start',
+        );
+      }
+    }
+  }
+}
+
+// Discord message buffer for polling (similar to WhatsApp)
+let discordMessageBuffer: NewMessage[] = [];
+
+async function connectDiscordChannel(): Promise<void> {
+  if (!DISCORD_BOT_TOKEN) {
+    logger.error('DISCORD_BOT_TOKEN not set in .env');
+    throw new Error('DISCORD_BOT_TOKEN required when DISCORD_ENABLED=true');
+  }
+
+  await connectDiscord({
+    token: DISCORD_BOT_TOKEN,
+    onMessage: (msg) => {
+      // Buffer messages for polling loop
+      discordMessageBuffer.push(msg);
+    },
+    onMetadata: (jid, timestamp) => {
+      storeChatMetadata(jid, timestamp);
+    },
+    registeredChannels: () => new Set(Object.keys(registeredGroups)),
+  });
+
+  logger.info('Discord channel connected');
+
+  // Start loops if not already running
+  startSchedulerLoop({
+    sendMessage,
+    registeredGroups: () => registeredGroups,
+    getSessions: () => sessions,
+  });
+  startIpcWatcher();
+  startDiscordMessageLoop();
+}
+
+async function startDiscordMessageLoop(): Promise<void> {
+  if (messageLoopRunning) {
+    logger.debug('Message loop already running, skipping duplicate start');
+    return;
+  }
+  messageLoopRunning = true;
+  logger.info(`NanoClaw running on Discord (trigger: @${ASSISTANT_NAME})`);
+
+  while (true) {
+    try {
+      // Process buffered Discord messages
+      const messages = [...discordMessageBuffer];
+      discordMessageBuffer = [];
+
+      // Also check database for any missed messages (similar to WhatsApp polling)
+      const jids = Object.keys(registeredGroups);
+      const { messages: dbMessages } = getNewMessages(
+        jids,
+        lastTimestamp,
+        ASSISTANT_NAME,
+      );
+
+      // Combine and dedupe by ID
+      const allMessages = [...messages];
+      for (const dbMsg of dbMessages) {
+        if (!allMessages.some((m) => m.id === dbMsg.id)) {
+          allMessages.push(dbMsg);
+        }
+      }
+
+      // Sort by timestamp
+      allMessages.sort(
+        (a, b) =>
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+      );
+
+      if (allMessages.length > 0) {
+        logger.info({ count: allMessages.length }, 'New messages');
+      }
+
+      for (const msg of allMessages) {
+        try {
+          // Store message if from Discord (WhatsApp already stores in event handler)
+          if (isDiscordJid(msg.chat_jid) && registeredGroups[msg.chat_jid]) {
+            // Store in DB for context retrieval
+            const { storeDiscordMessage } = await import('./db.js');
+            storeDiscordMessage(msg);
+          }
+
+          await processMessage(msg);
+          lastTimestamp = msg.timestamp;
+          saveState();
+        } catch (err) {
+          logger.error(
+            { err, msg: msg.id },
+            'Error processing message, will retry',
+          );
+          break;
+        }
+      }
+    } catch (err) {
+      logger.error({ err }, 'Error in message loop');
+    }
+    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL));
   }
 }
 
@@ -839,7 +1006,27 @@ async function main(): Promise<void> {
   initDatabase();
   logger.info('Database initialized');
   loadState();
-  await connectWhatsApp();
+
+  const channelsEnabled: string[] = [];
+
+  if (WHATSAPP_ENABLED) {
+    channelsEnabled.push('WhatsApp');
+    await connectWhatsApp();
+  }
+
+  if (DISCORD_ENABLED) {
+    channelsEnabled.push('Discord');
+    await connectDiscordChannel();
+  }
+
+  if (channelsEnabled.length === 0) {
+    logger.error(
+      'No channels enabled. Set DISCORD_ENABLED=true or WHATSAPP_ENABLED=true in .env',
+    );
+    process.exit(1);
+  }
+
+  logger.info({ channels: channelsEnabled }, 'NanoClaw started');
 }
 
 main().catch((err) => {

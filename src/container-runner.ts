@@ -2,7 +2,7 @@
  * Container Runner for NanoClaw
  * Spawns agent execution in Apple Container and handles IPC
  */
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -17,6 +17,26 @@ import {
 import { logger } from './logger.js';
 import { validateAdditionalMounts } from './mount-security.js';
 import { RegisteredGroup } from './types.js';
+
+// Auto-detect container runtime
+function detectContainerRuntime(): 'docker' | 'container' {
+  // Check if Docker is available and running
+  const dockerCheck = spawnSync('docker', ['info'], { stdio: 'pipe' });
+  if (dockerCheck.status === 0) {
+    return 'docker';
+  }
+
+  // Check if Apple Container is available
+  const containerCheck = spawnSync('which', ['container'], { stdio: 'pipe' });
+  if (containerCheck.status === 0) {
+    return 'container';
+  }
+
+  // Default to docker if nothing detected (will fail with helpful error)
+  return 'docker';
+}
+
+const CONTAINER_RUNTIME = detectContainerRuntime();
 
 // Sentinel markers for robust output parsing (must match agent-runner)
 const OUTPUT_START_MARKER = '---NANOCLAW_OUTPUT_START---';
@@ -149,6 +169,16 @@ function buildVolumeMounts(
     }
   }
 
+  // Gmail credentials directory
+  const gmailDir = path.join(homeDir, '.gmail-mcp');
+  if (fs.existsSync(gmailDir)) {
+    mounts.push({
+      hostPath: gmailDir,
+      containerPath: '/home/node/.gmail-mcp',
+      readonly: false, // MCP may need to refresh tokens
+    });
+  }
+
   // Additional mounts validated against external allowlist (tamper-proof from containers)
   if (group.containerConfig?.additionalMounts) {
     const validatedMounts = validateAdditionalMounts(
@@ -165,15 +195,26 @@ function buildVolumeMounts(
 function buildContainerArgs(mounts: VolumeMount[]): string[] {
   const args: string[] = ['run', '-i', '--rm'];
 
-  // Apple Container: --mount for readonly, -v for read-write
-  for (const mount of mounts) {
-    if (mount.readonly) {
-      args.push(
-        '--mount',
-        `type=bind,source=${mount.hostPath},target=${mount.containerPath},readonly`,
-      );
-    } else {
-      args.push('-v', `${mount.hostPath}:${mount.containerPath}`);
+  if (CONTAINER_RUNTIME === 'docker') {
+    // Docker: use -v with :ro suffix for readonly
+    for (const mount of mounts) {
+      if (mount.readonly) {
+        args.push('-v', `${mount.hostPath}:${mount.containerPath}:ro`);
+      } else {
+        args.push('-v', `${mount.hostPath}:${mount.containerPath}`);
+      }
+    }
+  } else {
+    // Apple Container: --mount for readonly, -v for read-write
+    for (const mount of mounts) {
+      if (mount.readonly) {
+        args.push(
+          '--mount',
+          `type=bind,source=${mount.hostPath},target=${mount.containerPath},readonly`,
+        );
+      } else {
+        args.push('-v', `${mount.hostPath}:${mount.containerPath}`);
+      }
     }
   }
 
@@ -219,7 +260,7 @@ export async function runContainerAgent(
   fs.mkdirSync(logsDir, { recursive: true });
 
   return new Promise((resolve) => {
-    const container = spawn('container', containerArgs, {
+    const container = spawn(CONTAINER_RUNTIME, containerArgs, {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
 

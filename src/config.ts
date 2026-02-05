@@ -45,3 +45,11 @@ export const TRIGGER_PATTERN = new RegExp(
 // Uses system timezone by default
 export const TIMEZONE =
   process.env.TZ || Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+// Channel configuration
+// Set which channels are enabled (at least one required)
+export const DISCORD_ENABLED = process.env.DISCORD_ENABLED === 'true';
+export const WHATSAPP_ENABLED = process.env.WHATSAPP_ENABLED !== 'false'; // Default true for backwards compat
+
+// Discord configuration
+export const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || '';

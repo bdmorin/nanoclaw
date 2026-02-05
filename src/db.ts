@@ -394,3 +394,21 @@ export function getTaskRunLogs(taskId: string, limit = 10): TaskRunLog[] {
     )
     .all(taskId, limit) as TaskRunLog[];
 }
+
+/**
+ * Store a Discord message (channel-agnostic format).
+ * Used for Discord messages that need to be stored in the database.
+ */
+export function storeDiscordMessage(msg: NewMessage): void {
+  db.prepare(
+    `INSERT OR REPLACE INTO messages (id, chat_jid, sender, sender_name, content, timestamp, is_from_me) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    msg.id,
+    msg.chat_jid,
+    msg.sender,
+    msg.sender_name,
+    msg.content,
+    msg.timestamp,
+    0, // Discord messages are never "from me" (bot sends separately)
+  );
+}
