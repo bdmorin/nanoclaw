@@ -10,6 +10,7 @@ import makeWASocket, {
   makeCacheableSignalKeyStore,
   useMultiFileAuthState,
 } from '@whiskeysockets/baileys';
+import { CronExpressionParser } from 'cron-parser';
 
 import {
   ASSISTANT_NAME,
@@ -31,27 +32,37 @@ import {
   setDiscordTyping,
 } from './discord-client.js';
 import {
+  AgentResponse,
   AvailableGroup,
   runContainerAgent,
   writeGroupsSnapshot,
   writeTasksSnapshot,
 } from './container-runner.js';
 import {
+  createTask,
+  deleteTask,
   getAllChats,
+  getAllRegisteredGroups,
+  getAllSessions,
   getAllTasks,
   getLastGroupSync,
   getMessagesSince,
   getNewMessages,
+  getRouterState,
   getTaskById,
   initDatabase,
   setLastGroupSync,
+  setRegisteredGroup,
+  setRouterState,
+  setSession,
   storeChatMetadata,
   storeMessage,
   updateChatName,
+  updateTask,
 } from './db.js';
+import { GroupQueue } from './group-queue.js';
 import { startSchedulerLoop } from './task-scheduler.js';
-import { NewMessage, RegisteredGroup, Session } from './types.js';
-import { loadJson, saveJson } from './utils.js';
+import { NewMessage, RegisteredGroup } from './types.js';
 import { logger } from './logger.js';
 import { dashboardEvents, startDashboard } from './dashboard.js';
 
@@ -59,7 +70,7 @@ const GROUP_SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 let sock: WASocket;
 let lastTimestamp = '';
-let sessions: Session = {};
+let sessions: Record<string, string> = {};
 let registeredGroups: Record<string, RegisteredGroup> = {};
 let lastAgentTimestamp: Record<string, string> = {};
 // LID to phone number mapping (WhatsApp now sends LID JIDs for self-chats)
@@ -68,6 +79,8 @@ let lidToPhoneMap: Record<string, string> = {};
 let messageLoopRunning = false;
 let ipcWatcherRunning = false;
 let groupSyncTimerStarted = false;
+
+const queue = new GroupQueue();
 
 /**
  * Translate a JID from LID format to phone format if we have a mapping.
@@ -97,18 +110,17 @@ async function setTyping(jid: string, isTyping: boolean): Promise<void> {
 }
 
 function loadState(): void {
-  const statePath = path.join(DATA_DIR, 'router_state.json');
-  const state = loadJson<{
-    last_timestamp?: string;
-    last_agent_timestamp?: Record<string, string>;
-  }>(statePath, {});
-  lastTimestamp = state.last_timestamp || '';
-  lastAgentTimestamp = state.last_agent_timestamp || {};
-  sessions = loadJson(path.join(DATA_DIR, 'sessions.json'), {});
-  registeredGroups = loadJson(
-    path.join(DATA_DIR, 'registered_groups.json'),
-    {},
-  );
+  // Load from SQLite (migration from JSON happens in initDatabase)
+  lastTimestamp = getRouterState('last_timestamp') || '';
+  const agentTs = getRouterState('last_agent_timestamp');
+  try {
+    lastAgentTimestamp = agentTs ? JSON.parse(agentTs) : {};
+  } catch {
+    logger.warn('Corrupted last_agent_timestamp in DB, resetting');
+    lastAgentTimestamp = {};
+  }
+  sessions = getAllSessions();
+  registeredGroups = getAllRegisteredGroups();
   logger.info(
     { groupCount: Object.keys(registeredGroups).length },
     'State loaded',
@@ -116,16 +128,16 @@ function loadState(): void {
 }
 
 function saveState(): void {
-  saveJson(path.join(DATA_DIR, 'router_state.json'), {
-    last_timestamp: lastTimestamp,
-    last_agent_timestamp: lastAgentTimestamp,
-  });
-  saveJson(path.join(DATA_DIR, 'sessions.json'), sessions);
+  setRouterState('last_timestamp', lastTimestamp);
+  setRouterState(
+    'last_agent_timestamp',
+    JSON.stringify(lastAgentTimestamp),
+  );
 }
 
 function registerGroup(jid: string, group: RegisteredGroup): void {
   registeredGroups[jid] = group;
-  saveJson(path.join(DATA_DIR, 'registered_groups.json'), registeredGroups);
+  setRegisteredGroup(jid, group);
 
   // Create group folder
   const groupDir = path.join(DATA_DIR, '..', 'groups', group.folder);
@@ -193,26 +205,35 @@ function getAvailableGroups(): AvailableGroup[] {
     }));
 }
 
-async function processMessage(msg: NewMessage): Promise<void> {
-  const group = registeredGroups[msg.chat_jid];
-  if (!group) return;
+/**
+ * Process all pending messages for a group.
+ * Called by the GroupQueue when it's this group's turn.
+ */
+async function processGroupMessages(chatJid: string): Promise<boolean> {
+  const group = registeredGroups[chatJid];
+  if (!group) return true;
 
-  const content = msg.content.trim();
   const isMainGroup = group.folder === MAIN_GROUP_FOLDER;
 
-  // Main group responds to all messages; other groups require trigger prefix
-  if (!isMainGroup && !TRIGGER_PATTERN.test(content)) return;
-
-  // Get all messages since last agent interaction so the session has full context
-  const sinceTimestamp = lastAgentTimestamp[msg.chat_jid] || '';
+  // Get all messages since last agent interaction
+  const sinceTimestamp = lastAgentTimestamp[chatJid] || '';
   const missedMessages = getMessagesSince(
-    msg.chat_jid,
+    chatJid,
     sinceTimestamp,
     ASSISTANT_NAME,
   );
 
+  if (missedMessages.length === 0) return true;
+
+  // For non-main groups, check if trigger is required and present
+  if (!isMainGroup && group.requiresTrigger !== false) {
+    const hasTrigger = missedMessages.some((m) =>
+      TRIGGER_PATTERN.test(m.content.trim()),
+    );
+    if (!hasTrigger) return true;
+  }
+
   const lines = missedMessages.map((m) => {
-    // Escape XML special characters in content
     const escapeXml = (s: string) =>
       s
         .replace(/&/g, '&amp;')
@@ -223,38 +244,55 @@ async function processMessage(msg: NewMessage): Promise<void> {
   });
   const prompt = `<messages>\n${lines.join('\n')}\n</messages>`;
 
-  if (!prompt) return;
-
   logger.info(
     { group: group.name, messageCount: missedMessages.length },
-    'Processing message',
+    'Processing messages',
   );
 
-  // Emit dashboard event
+  // Emit dashboard event for incoming messages
+  const lastMsg = missedMessages[missedMessages.length - 1];
   dashboardEvents.emit('message_in', {
-    sender: msg.sender_name,
+    sender: lastMsg.sender_name,
     group: group.name,
-    content: content.slice(0, 200),
+    content: lastMsg.content.slice(0, 200),
   });
 
-  await setTyping(msg.chat_jid, true);
+  await setTyping(chatJid, true);
   const startTime = Date.now();
   dashboardEvents.emit('agent_start', { group: group.name });
-  const response = await runAgent(group, prompt, msg.chat_jid);
+  const response = await runAgent(group, prompt, chatJid);
   dashboardEvents.emit('agent_done', { group: group.name, duration: Date.now() - startTime });
-  await setTyping(msg.chat_jid, false);
+  await setTyping(chatJid, false);
 
-  if (response) {
-    lastAgentTimestamp[msg.chat_jid] = msg.timestamp;
-    await sendMessage(msg.chat_jid, `${ASSISTANT_NAME}: ${response}`);
+  if (response === 'error') {
+    // Container or agent error — signal failure so queue can retry with backoff
+    return false;
   }
+
+  // Agent processed messages successfully (whether it responded or stayed silent)
+  lastAgentTimestamp[chatJid] =
+    missedMessages[missedMessages.length - 1].timestamp;
+  saveState();
+
+  if (response.outputType === 'message' && response.userMessage) {
+    await sendMessage(chatJid, `${ASSISTANT_NAME}: ${response.userMessage}`);
+  }
+
+  if (response.internalLog) {
+    logger.info(
+      { group: group.name, outputType: response.outputType },
+      `Agent: ${response.internalLog}`,
+    );
+  }
+
+  return true;
 }
 
 async function runAgent(
   group: RegisteredGroup,
   prompt: string,
   chatJid: string,
-): Promise<string | null> {
+): Promise<AgentResponse | 'error'> {
   const isMain = group.folder === MAIN_GROUP_FOLDER;
   const sessionId = sessions[group.folder];
 
@@ -284,17 +322,21 @@ async function runAgent(
   );
 
   try {
-    const output = await runContainerAgent(group, {
-      prompt,
-      sessionId,
-      groupFolder: group.folder,
-      chatJid,
-      isMain,
-    });
+    const output = await runContainerAgent(
+      group,
+      {
+        prompt,
+        sessionId,
+        groupFolder: group.folder,
+        chatJid,
+        isMain,
+      },
+      (proc, containerName) => queue.registerProcess(chatJid, proc, containerName),
+    );
 
     if (output.newSessionId) {
       sessions[group.folder] = output.newSessionId;
-      saveJson(path.join(DATA_DIR, 'sessions.json'), sessions);
+      setSession(group.folder, output.newSessionId);
     }
 
     if (output.status === 'error') {
@@ -302,13 +344,13 @@ async function runAgent(
         { group: group.name, error: output.error },
         'Container agent error',
       );
-      return null;
+      return 'error';
     }
 
-    return output.result;
+    return output.result ?? { outputType: 'log' };
   } catch (err) {
     logger.error({ group: group.name, err }, 'Agent error');
-    return null;
+    return 'error';
   }
 }
 
@@ -466,6 +508,7 @@ async function processTaskIpc(
     context_mode?: string;
     groupFolder?: string;
     chatJid?: string;
+    targetJid?: string;
     // For register_group
     jid?: string;
     name?: string;
@@ -476,42 +519,33 @@ async function processTaskIpc(
   sourceGroup: string, // Verified identity from IPC directory
   isMain: boolean, // Verified from directory path
 ): Promise<void> {
-  // Import db functions dynamically to avoid circular deps
-  const {
-    createTask,
-    updateTask,
-    deleteTask,
-    getTaskById: getTask,
-  } = await import('./db.js');
-  const { CronExpressionParser } = await import('cron-parser');
-
   switch (data.type) {
     case 'schedule_task':
       if (
         data.prompt &&
         data.schedule_type &&
         data.schedule_value &&
-        data.groupFolder
+        data.targetJid
       ) {
-        // Authorization: non-main groups can only schedule for themselves
-        const targetGroup = data.groupFolder;
-        if (!isMain && targetGroup !== sourceGroup) {
+        // Resolve the target group from JID
+        const targetJid = data.targetJid as string;
+        const targetGroupEntry = registeredGroups[targetJid];
+
+        if (!targetGroupEntry) {
           logger.warn(
-            { sourceGroup, targetGroup },
-            'Unauthorized schedule_task attempt blocked',
+            { targetJid },
+            'Cannot schedule task: target group not registered',
           );
           break;
         }
 
-        // Resolve the correct JID for the target group (don't trust IPC payload)
-        const targetJid = Object.entries(registeredGroups).find(
-          ([, group]) => group.folder === targetGroup,
-        )?.[0];
+        const targetFolder = targetGroupEntry.folder;
 
-        if (!targetJid) {
+        // Authorization: non-main groups can only schedule for themselves
+        if (!isMain && targetFolder !== sourceGroup) {
           logger.warn(
-            { targetGroup },
-            'Cannot schedule task: target group not registered',
+            { sourceGroup, targetFolder },
+            'Unauthorized schedule_task attempt blocked',
           );
           break;
         }
@@ -561,7 +595,7 @@ async function processTaskIpc(
             : 'isolated';
         createTask({
           id: taskId,
-          group_folder: targetGroup,
+          group_folder: targetFolder,
           chat_jid: targetJid,
           prompt: data.prompt,
           schedule_type: scheduleType,
@@ -572,7 +606,7 @@ async function processTaskIpc(
           created_at: new Date().toISOString(),
         });
         logger.info(
-          { taskId, sourceGroup, targetGroup, contextMode },
+          { taskId, sourceGroup, targetFolder, contextMode },
           'Task created via IPC',
         );
       }
@@ -580,7 +614,7 @@ async function processTaskIpc(
 
     case 'pause_task':
       if (data.taskId) {
-        const task = getTask(data.taskId);
+        const task = getTaskById(data.taskId);
         if (task && (isMain || task.group_folder === sourceGroup)) {
           updateTask(data.taskId, { status: 'paused' });
           logger.info(
@@ -598,7 +632,7 @@ async function processTaskIpc(
 
     case 'resume_task':
       if (data.taskId) {
-        const task = getTask(data.taskId);
+        const task = getTaskById(data.taskId);
         if (task && (isMain || task.group_folder === sourceGroup)) {
           updateTask(data.taskId, { status: 'active' });
           logger.info(
@@ -616,7 +650,7 @@ async function processTaskIpc(
 
     case 'cancel_task':
       if (data.taskId) {
-        const task = getTask(data.taskId);
+        const task = getTaskById(data.taskId);
         if (task && (isMain || task.group_folder === sourceGroup)) {
           deleteTask(data.taskId);
           logger.info(
@@ -642,9 +676,7 @@ async function processTaskIpc(
         await syncGroupMetadata(true);
         // Write updated snapshot immediately
         const availableGroups = getAvailableGroups();
-        const { writeGroupsSnapshot: writeGroups } =
-          await import('./container-runner.js');
-        writeGroups(
+        writeGroupsSnapshot(
           sourceGroup,
           true,
           availableGroups,
@@ -731,7 +763,7 @@ async function connectWhatsApp(): Promise<void> {
       }
     } else if (connection === 'open') {
       logger.info('Connected to WhatsApp');
-      
+
       // Build LID to phone mapping from auth state for self-chat translation
       if (sock.user) {
         const phoneUser = sock.user.id.split(':')[0];
@@ -741,7 +773,7 @@ async function connectWhatsApp(): Promise<void> {
           logger.debug({ lidUser, phoneUser }, 'LID to phone mapping set');
         }
       }
-      
+
       // Sync group metadata on startup (respects 24h cache)
       syncGroupMetadata().catch((err) =>
         logger.error({ err }, 'Initial group sync failed'),
@@ -759,8 +791,12 @@ async function connectWhatsApp(): Promise<void> {
         sendMessage,
         registeredGroups: () => registeredGroups,
         getSessions: () => sessions,
+        queue,
+        onProcess: (groupJid, proc, containerName) => queue.registerProcess(groupJid, proc, containerName),
       });
       startIpcWatcher();
+      queue.setProcessMessagesFn(processGroupMessages);
+      recoverPendingMessages();
       startMessageLoop();
     }
   });
@@ -775,7 +811,7 @@ async function connectWhatsApp(): Promise<void> {
 
       // Translate LID JID to phone JID if applicable
       const chatJid = translateJid(rawJid);
-      
+
       const timestamp = new Date(
         Number(msg.messageTimestamp) * 1000,
       ).toISOString();
@@ -802,34 +838,57 @@ async function startMessageLoop(): Promise<void> {
     return;
   }
   messageLoopRunning = true;
+
   logger.info(`NanoClaw running (trigger: @${ASSISTANT_NAME})`);
 
   while (true) {
     try {
       const jids = Object.keys(registeredGroups);
-      const { messages } = getNewMessages(jids, lastTimestamp, ASSISTANT_NAME);
+      const { messages, newTimestamp } = getNewMessages(
+        jids,
+        lastTimestamp,
+        ASSISTANT_NAME,
+      );
 
-      if (messages.length > 0)
+      if (messages.length > 0) {
         logger.info({ count: messages.length }, 'New messages');
-      for (const msg of messages) {
-        try {
-          await processMessage(msg);
-          // Only advance timestamp after successful processing for at-least-once delivery
-          lastTimestamp = msg.timestamp;
-          saveState();
-        } catch (err) {
-          logger.error(
-            { err, msg: msg.id },
-            'Error processing message, will retry',
-          );
-          // Stop processing this batch - failed message will be retried next loop
-          break;
+
+        // Advance the "seen" cursor for all messages immediately
+        lastTimestamp = newTimestamp;
+        saveState();
+
+        // Deduplicate by group and enqueue
+        const groupsWithMessages = new Set<string>();
+        for (const msg of messages) {
+          groupsWithMessages.add(msg.chat_jid);
+        }
+
+        for (const chatJid of groupsWithMessages) {
+          queue.enqueueMessageCheck(chatJid);
         }
       }
     } catch (err) {
       logger.error({ err }, 'Error in message loop');
     }
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL));
+  }
+}
+
+/**
+ * Startup recovery: check for unprocessed messages in registered groups.
+ * Handles crash between advancing lastTimestamp and processing messages.
+ */
+function recoverPendingMessages(): void {
+  for (const [chatJid, group] of Object.entries(registeredGroups)) {
+    const sinceTimestamp = lastAgentTimestamp[chatJid] || '';
+    const pending = getMessagesSince(chatJid, sinceTimestamp, ASSISTANT_NAME);
+    if (pending.length > 0) {
+      logger.info(
+        { group: group.name, pendingCount: pending.length },
+        'Recovery: found unprocessed messages',
+      );
+      queue.enqueueMessageCheck(chatJid);
+    }
   }
 }
 
@@ -947,8 +1006,12 @@ async function connectDiscordChannel(): Promise<void> {
     sendMessage,
     registeredGroups: () => registeredGroups,
     getSessions: () => sessions,
+    queue,
+    onProcess: (groupJid, proc, containerName) => queue.registerProcess(groupJid, proc, containerName),
   });
   startIpcWatcher();
+  queue.setProcessMessagesFn(processGroupMessages);
+  recoverPendingMessages();
   startDiscordMessageLoop();
 }
 
@@ -962,54 +1025,40 @@ async function startDiscordMessageLoop(): Promise<void> {
 
   while (true) {
     try {
-      // Process buffered Discord messages
-      const messages = [...discordMessageBuffer];
+      // Process buffered Discord messages - store them in DB
+      const buffered = [...discordMessageBuffer];
       discordMessageBuffer = [];
 
-      // Also check database for any missed messages (similar to WhatsApp polling)
+      for (const msg of buffered) {
+        if (isDiscordJid(msg.chat_jid) && registeredGroups[msg.chat_jid]) {
+          const { storeDiscordMessage } = await import('./db.js');
+          storeDiscordMessage(msg);
+        }
+      }
+
+      // Poll DB for new messages (same pattern as WhatsApp loop)
       const jids = Object.keys(registeredGroups);
-      const { messages: dbMessages } = getNewMessages(
+      const { messages, newTimestamp } = getNewMessages(
         jids,
         lastTimestamp,
         ASSISTANT_NAME,
       );
 
-      // Combine and dedupe by ID
-      const allMessages = [...messages];
-      for (const dbMsg of dbMessages) {
-        if (!allMessages.some((m) => m.id === dbMsg.id)) {
-          allMessages.push(dbMsg);
+      if (messages.length > 0) {
+        logger.info({ count: messages.length }, 'New messages');
+
+        // Advance the "seen" cursor for all messages immediately
+        lastTimestamp = newTimestamp;
+        saveState();
+
+        // Deduplicate by group and enqueue
+        const groupsWithMessages = new Set<string>();
+        for (const msg of messages) {
+          groupsWithMessages.add(msg.chat_jid);
         }
-      }
 
-      // Sort by timestamp
-      allMessages.sort(
-        (a, b) =>
-          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-      );
-
-      if (allMessages.length > 0) {
-        logger.info({ count: allMessages.length }, 'New messages');
-      }
-
-      for (const msg of allMessages) {
-        try {
-          // Store message if from Discord (WhatsApp already stores in event handler)
-          if (isDiscordJid(msg.chat_jid) && registeredGroups[msg.chat_jid]) {
-            // Store in DB for context retrieval
-            const { storeDiscordMessage } = await import('./db.js');
-            storeDiscordMessage(msg);
-          }
-
-          await processMessage(msg);
-          lastTimestamp = msg.timestamp;
-          saveState();
-        } catch (err) {
-          logger.error(
-            { err, msg: msg.id },
-            'Error processing message, will retry',
-          );
-          break;
+        for (const chatJid of groupsWithMessages) {
+          queue.enqueueMessageCheck(chatJid);
         }
       }
     } catch (err) {
@@ -1024,6 +1073,15 @@ async function main(): Promise<void> {
   initDatabase();
   logger.info('Database initialized');
   loadState();
+
+  // Graceful shutdown handlers
+  const shutdown = async (signal: string) => {
+    logger.info({ signal }, 'Shutdown signal received');
+    await queue.shutdown(10000);
+    process.exit(0);
+  };
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 
   // Start dashboard server
   startDashboard();
