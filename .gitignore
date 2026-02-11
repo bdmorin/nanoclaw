@@ -3,6 +3,9 @@ node_modules/
 
 # Build output
 dist/
+video-pipeline/out/
+video-pipeline/public/audio/
+groups/main/site/site/
 
 # Local data & auth
 store/
@@ -12,6 +15,11 @@ logs/
 # Secrets
 *.keys.json
 .env
+client_secret_*.json
+oauth-url.txt
+
+# Google verification (public but not repo-relevant)
+google*.html
 
 # OS
 .DS_Store
@@ -20,6 +28,8 @@ logs/
 .idea/
 .vscode/
 
+# Misc
 agents-sdk-docs
 bdmorin-client_secret_*.json
 container/fabric
+.claude/error-log.jsonl
