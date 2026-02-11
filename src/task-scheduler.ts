@@ -30,7 +30,7 @@ export interface SchedulerDependencies {
   onProcess: (groupJid: string, proc: ChildProcess, containerName: string) => void;
 }
 
-async function runTask(
+export async function runTask(
   task: ScheduledTask,
   deps: SchedulerDependencies,
 ): Promise<void> {

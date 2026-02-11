@@ -25,7 +25,7 @@ export const CONTAINER_IMAGE =
 export const CONTAINER_TIMEOUT = parseInt(
   process.env.CONTAINER_TIMEOUT || '900000',
   10,
-);
+); // 15 minutes - research tasks need room to breathe
 export const CONTAINER_MAX_OUTPUT_SIZE = parseInt(
   process.env.CONTAINER_MAX_OUTPUT_SIZE || '10485760',
   10,
@@ -55,5 +55,21 @@ export const TIMEZONE =
 export const DISCORD_ENABLED = process.env.DISCORD_ENABLED === 'true';
 export const WHATSAPP_ENABLED = process.env.WHATSAPP_ENABLED !== 'false'; // Default true for backwards compat
 
+// Email / IMAP configuration
+export const EMAIL_ENABLED = process.env.EMAIL_ENABLED === 'true';
+export const POSTEO_IMAP_HOST = process.env.POSTEO_IMAP_HOST || 'posteo.de';
+export const POSTEO_IMAP_PORT = parseInt(process.env.POSTEO_IMAP_PORT || '993', 10);
+export const POSTEO_IMAP_USER = process.env.POSTEO_IMAP_USER || '';
+export const POSTEO_IMAP_PASS = process.env.POSTEO_IMAP_PASS || '';
+export const EMAIL_RULES_PATH = path.join(DATA_DIR, 'email-rules.json');
+
 // Discord configuration
 export const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || '';
+
+// Matrix configuration
+export const MATRIX_ENABLED = process.env.MATRIX_ENABLED === 'true';
+export const MATRIX_HOMESERVER = process.env.MATRIX_HOMESERVER || '';
+export const MATRIX_ACCESS_TOKEN = process.env.MATRIX_ACCESS_TOKEN || '';
+export const MATRIX_USER_ID = process.env.MATRIX_USER_ID || '';
+export const MATRIX_DEVICE_ID = process.env.MATRIX_DEVICE_ID || '';
+export const MATRIX_STORE_PATH = path.resolve(STORE_DIR, 'matrix-crypto');

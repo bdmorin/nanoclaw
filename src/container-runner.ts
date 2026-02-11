@@ -154,7 +154,7 @@ function buildVolumeMounts(
   const envFile = path.join(projectRoot, '.env');
   if (fs.existsSync(envFile)) {
     const envContent = fs.readFileSync(envFile, 'utf-8');
-    const allowedVars = ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY'];
+    const allowedVars = ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY', 'SLACK_WEBHOOK_URL', 'POSTEO_USER', 'POSTEO_PASSWORD', 'POSTEO_IMAP_HOST', 'POSTEO_SMTP_HOST', 'CODEBERG_API_KEY', 'ELEVENLABS_API_KEY', 'MATRIX_ACCESS_TOKEN', 'MATRIX_HOMESERVER', 'MATRIX_USER_ID', 'MATRIX_DEVICE_ID'];
     const filteredLines = envContent.split('\n').filter((line) => {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith('#')) return false;

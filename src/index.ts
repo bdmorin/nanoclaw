@@ -17,8 +17,16 @@ import {
   DATA_DIR,
   DISCORD_BOT_TOKEN,
   DISCORD_ENABLED,
+  EMAIL_ENABLED,
+  GROUPS_DIR,
   IPC_POLL_INTERVAL,
   MAIN_GROUP_FOLDER,
+  MATRIX_ACCESS_TOKEN,
+  MATRIX_DEVICE_ID,
+  MATRIX_ENABLED,
+  MATRIX_HOMESERVER,
+  MATRIX_STORE_PATH,
+  MATRIX_USER_ID,
   POLL_INTERVAL,
   STORE_DIR,
   TIMEZONE,
@@ -31,6 +39,12 @@ import {
   sendDiscordMessage,
   setDiscordTyping,
 } from './discord-client.js';
+import {
+  connectMatrix,
+  isMatrixJid,
+  sendMatrixMessage,
+  setMatrixTyping,
+} from './matrix-client.js';
 import {
   AgentResponse,
   AvailableGroup,
@@ -56,12 +70,14 @@ import {
   setRouterState,
   setSession,
   storeChatMetadata,
+  storeDiscordMessage,
   storeMessage,
   updateChatName,
   updateTask,
 } from './db.js';
+import { EmailWatcher } from './email-watcher.js';
 import { GroupQueue } from './group-queue.js';
-import { startSchedulerLoop } from './task-scheduler.js';
+import { SchedulerDependencies, runTask, startSchedulerLoop } from './task-scheduler.js';
 import { NewMessage, RegisteredGroup } from './types.js';
 import { logger } from './logger.js';
 import { dashboardEvents, startDashboard } from './dashboard.js';
@@ -81,6 +97,8 @@ let ipcWatcherRunning = false;
 let groupSyncTimerStarted = false;
 
 const queue = new GroupQueue();
+let emailWatcher: EmailWatcher | null = null;
+let schedulerDeps: SchedulerDependencies | null = null;
 
 /**
  * Translate a JID from LID format to phone format if we have a mapping.
@@ -99,7 +117,12 @@ function translateJid(jid: string): string {
 
 async function setTyping(jid: string, isTyping: boolean): Promise<void> {
   try {
-    if (isDiscordJid(jid)) {
+    if (jid.startsWith('agent:') && jid.endsWith('@internal')) {
+      return;
+    }
+    if (isMatrixJid(jid)) {
+      await setMatrixTyping(jid, isTyping);
+    } else if (isDiscordJid(jid)) {
       await setDiscordTyping(jid, isTyping);
     } else if (sock) {
       await sock.sendPresenceUpdate(isTyping ? 'composing' : 'paused', jid);
@@ -196,7 +219,7 @@ function getAvailableGroups(): AvailableGroup[] {
   const registeredJids = new Set(Object.keys(registeredGroups));
 
   return chats
-    .filter((c) => c.jid !== '__group_sync__' && c.jid.endsWith('@g.us'))
+    .filter((c) => c.jid !== '__group_sync__' && (c.jid.endsWith('@g.us') || c.jid.startsWith('matrix::') || c.jid.startsWith('discord::')))
     .map((c) => ({
       jid: c.jid,
       name: c.name,
@@ -356,8 +379,14 @@ async function runAgent(
 
 async function sendMessage(jid: string, text: string): Promise<void> {
   try {
+    if (jid.startsWith('agent:') && jid.endsWith('@internal')) {
+      logger.info({ jid, length: text.length }, 'Internal agent message (logged)');
+      return;
+    }
     const group = registeredGroups[jid];
-    if (isDiscordJid(jid)) {
+    if (isMatrixJid(jid)) {
+      await sendMatrixMessage(jid, text);
+    } else if (isDiscordJid(jid)) {
       await sendDiscordMessage(jid, text);
     } else if (sock) {
       await sock.sendMessage(jid, { text });
@@ -515,6 +544,9 @@ async function processTaskIpc(
     folder?: string;
     trigger?: string;
     containerConfig?: RegisteredGroup['containerConfig'];
+    // For dispatch
+    target_agent?: string;
+    priority?: string;
   },
   sourceGroup: string, // Verified identity from IPC directory
   isMain: boolean, // Verified from directory path
@@ -715,6 +747,79 @@ async function processTaskIpc(
       }
       break;
 
+    case 'dispatch':
+      // Only main group can dispatch to specialist agents
+      if (!isMain) {
+        logger.warn(
+          { sourceGroup },
+          'Unauthorized dispatch attempt blocked',
+        );
+        break;
+      }
+      if (!data.target_agent || !data.prompt) {
+        logger.warn(
+          { data },
+          'Invalid dispatch request - missing target_agent or prompt',
+        );
+        break;
+      }
+      {
+        const agentJid = `agent:${data.target_agent}@internal`;
+        const agentGroup = registeredGroups[agentJid];
+        if (!agentGroup) {
+          logger.warn(
+            { target_agent: data.target_agent, agentJid },
+            'Dispatch failed: specialist agent not registered',
+          );
+          break;
+        }
+
+        // Find the main group's real chat JID for result routing
+        const mainChatJid = Object.entries(registeredGroups).find(
+          ([, g]) => g.folder === MAIN_GROUP_FOLDER,
+        )?.[0];
+
+        if (!mainChatJid || mainChatJid.endsWith('@internal')) {
+          logger.error(
+            'Cannot dispatch: no real chat JID found for main group',
+          );
+          break;
+        }
+
+        const taskId = `dispatch-${data.target_agent}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        createTask({
+          id: taskId,
+          group_folder: agentGroup.folder,
+          chat_jid: mainChatJid,
+          prompt: data.prompt,
+          schedule_type: 'once',
+          schedule_value: new Date().toISOString(),
+          context_mode: 'isolated',
+          next_run: new Date().toISOString(),
+          status: 'active',
+          created_at: new Date().toISOString(),
+        });
+
+        logger.info(
+          { taskId, target_agent: data.target_agent, priority: data.priority || 'normal' },
+          'Dispatch task created',
+        );
+
+        // Urgent: bypass scheduler, enqueue immediately
+        if (data.priority === 'urgent' && schedulerDeps) {
+          const task = getTaskById(taskId);
+          if (task) {
+            schedulerDeps.queue.enqueueTask(
+              mainChatJid,
+              taskId,
+              () => runTask(task, schedulerDeps!),
+            );
+            logger.info({ taskId }, 'Urgent dispatch enqueued immediately');
+          }
+        }
+      }
+      break;
+
     default:
       logger.warn({ type: data.type }, 'Unknown IPC task type');
   }
@@ -787,13 +892,14 @@ async function connectWhatsApp(): Promise<void> {
           );
         }, GROUP_SYNC_INTERVAL_MS);
       }
-      startSchedulerLoop({
+      schedulerDeps = {
         sendMessage,
         registeredGroups: () => registeredGroups,
         getSessions: () => sessions,
         queue,
         onProcess: (groupJid, proc, containerName) => queue.registerProcess(groupJid, proc, containerName),
-      });
+      };
+      startSchedulerLoop(schedulerDeps);
       startIpcWatcher();
       queue.setProcessMessagesFn(processGroupMessages);
       recoverPendingMessages();
@@ -981,6 +1087,9 @@ function ensureContainerSystemRunning(): void {
 // Discord message buffer for polling (similar to WhatsApp)
 let discordMessageBuffer: NewMessage[] = [];
 
+// Matrix message buffer for polling (same pattern)
+let matrixMessageBuffer: NewMessage[] = [];
+
 async function connectDiscordChannel(): Promise<void> {
   if (!DISCORD_BOT_TOKEN) {
     logger.error('DISCORD_BOT_TOKEN not set in .env');
@@ -1002,13 +1111,16 @@ async function connectDiscordChannel(): Promise<void> {
   logger.info('Discord channel connected');
 
   // Start loops if not already running
-  startSchedulerLoop({
-    sendMessage,
-    registeredGroups: () => registeredGroups,
-    getSessions: () => sessions,
-    queue,
-    onProcess: (groupJid, proc, containerName) => queue.registerProcess(groupJid, proc, containerName),
-  });
+  if (!schedulerDeps) {
+    schedulerDeps = {
+      sendMessage,
+      registeredGroups: () => registeredGroups,
+      getSessions: () => sessions,
+      queue,
+      onProcess: (groupJid, proc, containerName) => queue.registerProcess(groupJid, proc, containerName),
+    };
+  }
+  startSchedulerLoop(schedulerDeps);
   startIpcWatcher();
   queue.setProcessMessagesFn(processGroupMessages);
   recoverPendingMessages();
@@ -1068,15 +1180,167 @@ async function startDiscordMessageLoop(): Promise<void> {
   }
 }
 
+async function connectMatrixChannel(): Promise<void> {
+  if (!MATRIX_HOMESERVER || !MATRIX_ACCESS_TOKEN || !MATRIX_USER_ID || !MATRIX_DEVICE_ID) {
+    logger.error('Matrix credentials not fully configured in .env');
+    throw new Error('MATRIX_HOMESERVER, MATRIX_ACCESS_TOKEN, MATRIX_USER_ID, and MATRIX_DEVICE_ID required when MATRIX_ENABLED=true');
+  }
+
+  await connectMatrix({
+    homeserver: MATRIX_HOMESERVER,
+    userId: MATRIX_USER_ID,
+    accessToken: MATRIX_ACCESS_TOKEN,
+    deviceId: MATRIX_DEVICE_ID,
+    storePath: MATRIX_STORE_PATH,
+    onMessage: (msg) => {
+      matrixMessageBuffer.push(msg);
+    },
+    onMetadata: (jid, timestamp) => {
+      storeChatMetadata(jid, timestamp);
+    },
+    registeredChannels: () => new Set(Object.keys(registeredGroups)),
+  });
+
+  logger.info('Matrix channel connected');
+
+  // Start loops if not already running
+  if (!schedulerDeps) {
+    schedulerDeps = {
+      sendMessage,
+      registeredGroups: () => registeredGroups,
+      getSessions: () => sessions,
+      queue,
+      onProcess: (groupJid, proc, containerName) => queue.registerProcess(groupJid, proc, containerName),
+    };
+  }
+  startSchedulerLoop(schedulerDeps);
+  startIpcWatcher();
+  queue.setProcessMessagesFn(processGroupMessages);
+  recoverPendingMessages();
+  startMatrixMessageLoop();
+}
+
+async function startMatrixMessageLoop(): Promise<void> {
+  if (messageLoopRunning) {
+    logger.debug('Message loop already running, skipping duplicate start');
+    return;
+  }
+  messageLoopRunning = true;
+  logger.info(`NanoClaw running on Matrix (trigger: @${ASSISTANT_NAME})`);
+
+  while (true) {
+    try {
+      // Process buffered Matrix messages - store them in DB
+      const buffered = [...matrixMessageBuffer];
+      matrixMessageBuffer = [];
+
+      for (const msg of buffered) {
+        if (isMatrixJid(msg.chat_jid) && registeredGroups[msg.chat_jid]) {
+          storeDiscordMessage(msg); // Channel-agnostic message store
+        }
+      }
+
+      // Poll DB for new messages (same pattern as WhatsApp/Discord loop)
+      const jids = Object.keys(registeredGroups);
+      const { messages, newTimestamp } = getNewMessages(
+        jids,
+        lastTimestamp,
+        ASSISTANT_NAME,
+      );
+
+      if (messages.length > 0) {
+        logger.info({ count: messages.length }, 'New messages');
+
+        lastTimestamp = newTimestamp;
+        saveState();
+
+        const groupsWithMessages = new Set<string>();
+        for (const msg of messages) {
+          groupsWithMessages.add(msg.chat_jid);
+        }
+
+        for (const chatJid of groupsWithMessages) {
+          queue.enqueueMessageCheck(chatJid);
+        }
+      }
+    } catch (err) {
+      logger.error({ err }, 'Error in message loop');
+    }
+    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL));
+  }
+}
+
+/**
+ * Register internal specialist agents (e.g., publisher).
+ * These are "virtual" groups with internal JIDs that can be dispatched to by the main agent.
+ * Idempotent -- skips registration if already present.
+ */
+function registerInternalAgents(): void {
+  const internalAgents: Array<{
+    name: string;
+    folder: string;
+    jid: string;
+    containerConfig?: RegisteredGroup['containerConfig'];
+  }> = [
+    {
+      name: 'Publisher',
+      folder: 'publisher',
+      jid: 'agent:publisher@internal',
+      containerConfig: {
+        additionalMounts: [
+          {
+            hostPath: path.join(GROUPS_DIR, 'main', 'site'),
+            containerPath: 'site',
+            readonly: false,
+          },
+          {
+            hostPath: path.join(GROUPS_DIR, 'main', 'osint'),
+            containerPath: 'osint',
+            readonly: true,
+          },
+        ],
+      },
+    },
+  ];
+
+  for (const agent of internalAgents) {
+    if (registeredGroups[agent.jid]) {
+      logger.debug({ jid: agent.jid }, 'Internal agent already registered');
+      continue;
+    }
+
+    registerGroup(agent.jid, {
+      name: agent.name,
+      folder: agent.folder,
+      trigger: '', // Internal agents don't use triggers
+      added_at: new Date().toISOString(),
+      requiresTrigger: false,
+      containerConfig: agent.containerConfig,
+    });
+
+    logger.info(
+      { jid: agent.jid, name: agent.name },
+      'Internal agent registered',
+    );
+  }
+}
+
 async function main(): Promise<void> {
   ensureContainerSystemRunning();
   initDatabase();
   logger.info('Database initialized');
   loadState();
+  registerInternalAgents();
 
   // Graceful shutdown handlers
   const shutdown = async (signal: string) => {
     logger.info({ signal }, 'Shutdown signal received');
+    if (emailWatcher) {
+      await emailWatcher.stop();
+    }
+    // Disconnect Matrix client if running
+    const { disconnectMatrix } = await import('./matrix-client.js');
+    await disconnectMatrix();
     await queue.shutdown(10000);
     process.exit(0);
   };
@@ -1098,9 +1362,57 @@ async function main(): Promise<void> {
     await connectDiscordChannel();
   }
 
+  if (MATRIX_ENABLED) {
+    channelsEnabled.push('Matrix');
+    await connectMatrixChannel();
+  }
+
+  // Email sensor (not a channel — requires WhatsApp, Discord, or Matrix for responses)
+  if (EMAIL_ENABLED) {
+    // Find the main group JID
+    const mainGroupJid = Object.entries(registeredGroups).find(
+      ([, g]) => g.folder === MAIN_GROUP_FOLDER,
+    )?.[0];
+
+    if (mainGroupJid) {
+      emailWatcher = new EmailWatcher({
+        onEmail: (emailMsg) => {
+          const senderField = emailMsg.from === 'system'
+            ? 'system'
+            : `email:${emailMsg.from}`;
+
+          let content = `[EMAIL from ${emailMsg.from}]\nSubject: ${emailMsg.subject}\nDate: ${emailMsg.date}`;
+          if (emailMsg.attachments) {
+            content += `\nAttachments: ${emailMsg.attachments}`;
+          }
+          content += `\n\n${emailMsg.body}`;
+
+          const msg: NewMessage = {
+            id: `email-${emailMsg.uid}-${Date.now()}`,
+            chat_jid: mainGroupJid,
+            sender: senderField,
+            sender_name: `📧 ${senderField}`,
+            content,
+            timestamp: new Date().toISOString(),
+          };
+
+          storeDiscordMessage(msg);
+          queue.enqueueMessageCheck(mainGroupJid);
+        },
+      });
+
+      await emailWatcher.start();
+      logger.info('Email/IMAP sensor started');
+    } else {
+      logger.warn(
+        'EMAIL_ENABLED=true but no main group registered — skipping email watcher',
+      );
+    }
+  }
+
   if (channelsEnabled.length === 0) {
     logger.error(
-      'No channels enabled. Set DISCORD_ENABLED=true or WHATSAPP_ENABLED=true in .env',
+      'No channels enabled. Set MATRIX_ENABLED=true, DISCORD_ENABLED=true, or WHATSAPP_ENABLED=true in .env',
     );
     process.exit(1);
   }
