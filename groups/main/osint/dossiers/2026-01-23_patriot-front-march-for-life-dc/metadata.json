@@ -1,0 +1,21 @@
+{
+  "event": "Patriot Front at 2026 March for Life — Washington, DC",
+  "date": "2026-01-23",
+  "location": "National Mall / Smithsonian Metro Station, Washington, DC",
+  "type": "extremist_rally",
+  "groups_present": ["Patriot Front"],
+  "attendance_estimate": {
+    "extremists": "unknown — estimated dozens to 100+ based on prior years",
+    "counter_protesters": "multiple groups, specific count unknown"
+  },
+  "violence_incidents": false,
+  "arrests": 0,
+  "notable_incidents": ["1 member detained briefly for fare evasion at Smithsonian Station"],
+  "confidence": "HIGH",
+  "researcher": "oilcloth",
+  "created": "2026-02-07T17:30:00Z",
+  "sources_count": 12,
+  "video_sources": ["Walter Masterson YouTube (kRyZgItx4lc)", "news2share"],
+  "tags": ["patriot_front", "white_nationalism", "march_for_life", "christofascism", "thomas_rousseau", "counter_protest"],
+  "related_dossiers": []
+}

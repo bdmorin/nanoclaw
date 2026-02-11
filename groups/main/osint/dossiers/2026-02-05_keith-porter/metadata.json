@@ -1,0 +1,71 @@
+{
+  "subject": "Keith Porter Jr.",
+  "type": "officer-involved-shooting",
+  "status": "complete",
+  "date_of_incident": "2025-12-31",
+  "date_researched": "2026-02-05",
+  "researcher": "claude-code",
+  "confidence": "HIGH",
+  "victim": {
+    "name": "Keith Porter Jr.",
+    "age": 43,
+    "race": "Black",
+    "nationality": "USA",
+    "citizenship": "U.S. citizen",
+    "origin": "Compton",
+    "residence": "Northridge, Los Angeles",
+    "family": "father of two daughters (ages 9 and 20)",
+    "criminal_record": false
+  },
+  "incident": {
+    "date": "2025-12-31",
+    "time": "22:30",
+    "location": "Northridge, Los Angeles, California",
+    "setting": "apartment complex",
+    "agency": "ICE ERO",
+    "agent_status": "off-duty",
+    "outcome": "fatal",
+    "context": "New Year's Eve celebration",
+    "victim_activity": "firing celebratory shots into air"
+  },
+  "agent": {
+    "name": "Brian Palacios",
+    "agency": "ICE ERO",
+    "status": "off-duty",
+    "relationship_to_victim": "neighbor (same apartment complex)",
+    "identification_disputed": true,
+    "allegations_in_court": {
+      "child_abuse": true,
+      "child_abuse_detail": "whipping sons with belt",
+      "racist_remarks": true,
+      "racist_remarks_detail": "remarks about Black and Latino people",
+      "homophobic_slurs": true,
+      "gun_at_youth_event": true
+    },
+    "agent_defense": "claims self-defense, denies racism, cites DCFS/LAPD unfounded findings"
+  },
+  "legal": {
+    "charges_filed_against_agent": false,
+    "investigation": "LAPD Justice System Integrity Division",
+    "ag_investigation_requested": true,
+    "attorneys": ["Ben Crump", "Jamal Tooson"]
+  },
+  "tags": [
+    "ice-shooting",
+    "los-angeles",
+    "northridge",
+    "off-duty",
+    "black-victim",
+    "new-years-eve",
+    "fatal",
+    "no-charges",
+    "racism-allegations",
+    "child-abuse-allegations",
+    "neighbor-shooting"
+  ],
+  "sources_count": 13,
+  "related_cases": [
+    "renee-good",
+    "alex-pretti"
+  ]
+}

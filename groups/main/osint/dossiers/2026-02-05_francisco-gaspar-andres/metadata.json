@@ -1,0 +1,24 @@
+{
+  "id": "2026-02-05_francisco-gaspar-andres",
+  "subject": "Francisco Gaspar-Andres",
+  "type": "detention-death",
+  "created": "2026-02-05T14:20:46Z",
+  "updated": "2026-02-05T14:35:00Z",
+  "status": "completed",
+  "confidence": "high",
+  "tags": ["december-2025", "camp-east-montana", "medical-neglect", "sepsis", "organ-failure", "guatemala"],
+  "summary": "Francisco Gaspar-Andrés, 48, died Dec 3, 2025 at El Paso hospital after 75 days deteriorating health at Camp East Montana. Sepsis → multi-organ failure. Medical neglect: 54 days symptoms before hospitalization. First of 7 December deaths (deadliest month).",
+  "sources_count": 9,
+  "related_dossiers": ["geraldo-lunas-campos", "december-2025-pattern"],
+  "victim_details": {
+    "name": "Francisco Gaspar-Andrés",
+    "age": 48,
+    "country": "Guatemala",
+    "date_of_death": "2025-12-03",
+    "location_of_death": "The Hospitals of Providence East, El Paso, TX",
+    "facility": "Camp East Montana, Fort Bliss, El Paso, TX",
+    "days_in_custody": 75,
+    "cause_official": "Natural causes: liver and kidney failure",
+    "cause_actual": "Medical neglect leading to sepsis and multi-organ failure"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "2026-02-05_johnny-noviello",
+  "subject": "Johnny Noviello",
+  "type": "detention-death",
+  "created": "2026-02-05T14:23:12Z",
+  "updated": "2026-02-05T16:00:00Z",
+  "status": "complete",
+  "confidence": "high",
+  "tags": ["2025", "canada", "florida", "miami", "federal-detention-center", "epilepsy", "medical-neglect", "medication-denied", "malnutrition", "mental-health-failure", "hypothermia", "hypoglycemia", "tenth-death-2025"],
+  "summary": "49-year-old Canadian citizen and U.S. lawful permanent resident (34 years) died Jun 23, 2025 at Miami Federal Detention Center. Had epilepsy requiring daily medication - facility didn't stock Klonopin, only gave 75% of Tegretol dosage. Father delivered medication, never confirmed if Johnny received it (returned after death). Day 6: 'had not eaten in a while'. Day 25: reported depression, refused medical eval, mental health referral requested - NO FOLLOW-UP. Day 39: found unresponsive, hypothermia (95.5°F), severe hypoglycemia (less than half normal). ICE report: 'had been deteriorating for a while, probably not eating enough.' Family couldn't reach him (1 call in 5 weeks). 39 days in custody. Cause of death 'under investigation' 7+ months later. ENTIRELY PREVENTABLE.",
+  "sources_count": 20,
+  "related_dossiers": ["2026-02-05_isidro-perez", "2026-02-05_tien-xuan-phan"],
+  "key_findings": {
+    "date_of_death": "2025-06-23",
+    "age": 49,
+    "nationality": "Canada (also U.S. lawful permanent resident)",
+    "facility": "Bureau of Prisons Federal Detention Center, Miami, Florida",
+    "time_in_custody_days": 39,
+    "official_cause": "Under investigation (no findings after 7+ months)",
+    "critical_failures": [
+      "Epilepsy medication crisis: facility didn't stock Klonopin, only 75% Tegretol dosage",
+      "Father's medication delivery never confirmed received",
+      "Day 6: 'had not eaten in a while' - malnutrition ignored for 33 days",
+      "Day 25: depression, refused medical care, mental health referral requested - NO FOLLOW-UP",
+      "Prolonged deterioration: hypothermia (95.5°F), severe hypoglycemia at death",
+      "ICE admission: 'had been deteriorating for a while, probably not eating enough'",
+      "Family communication blocked (1 call in 5 weeks)"
+    ],
+    "medical_conditions": [
+      "Epilepsy (required Klonopin, Tegretol)",
+      "Seizure disorder (diagnosed Day 2)",
+      "Hypertension",
+      "Depression (reported Day 25)",
+      "Malnutrition (Day 6 onward)",
+      "Hypothermia at death (95.5°F)",
+      "Severe hypoglycemia at death"
+    ],
+    "pattern": "Medical neglect, inadequate medication, malnutrition ignored, mental health crisis ignored, prolonged deterioration, family blocked",
+    "ice_admission": "ICE death report: 'Findings suggesting that Mr. Noviello had been deteriorating for a while and among other things was probably not eating enough'",
+    "death_circumstances": "Found unresponsive at 12:54 PM, no pulse, hypothermia, severe hypoglycemia. CPR and AED administered. Pronounced dead at scene by Miami Fire Rescue at 1:36 PM.",
+    "family_advocacy": "Father Angelo Noviello, 80, delivered epilepsy medication to facility - never confirmed if received. Family 'painstakingly' worked to ensure meds. 'We are destroyed.' Could not reach Johnny except 1 call in 5 weeks.",
+    "investigation_status": "Cause of death under investigation 7+ months after death. Medical Examiner report not released. ICE death report published (90-day requirement) but lists no cause.",
+    "medication_crisis": "Facility did not stock required Klonopin. Only provided 75% of required Tegretol dosage. Family medication delivery blocked/never confirmed. Medication returned with belongings after death."
+  }
+}

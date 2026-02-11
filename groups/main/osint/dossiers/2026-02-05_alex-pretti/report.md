@@ -99,6 +99,16 @@ On January 24, 2026, Alex Jeffrey Pretti, a 37-year-old ICU nurse and U.S. citiz
 - Federal judge declined to compel federal officials to preserve all evidence
 - Judge later lifted restraining order allowing feds to collect evidence
 
+### Agents Identified (ProPublica)
+
+A **ProPublica** investigation identified the two federal agents who fired shots:
+- **Jesus Ochoa** — U.S. Border Patrol Agent
+- **Raymundo Gutierrez** — U.S. Customs and Border Protection Officer
+
+DHS declined to confirm the names. Both remain on duty/administrative status as of the DOJ investigation.
+
+*Source: ProPublica reporting, February 2026*
+
 ### Internal Review Contradictions
 
 A preliminary government internal review contradicts the Trump administration's initial narrative:

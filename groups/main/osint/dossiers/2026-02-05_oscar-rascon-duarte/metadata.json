@@ -1,0 +1,40 @@
+{
+  "id": "2026-02-05_oscar-rascon-duarte",
+  "subject": "Oscar Rascon Duarte",
+  "type": "detention-death",
+  "created": "2026-02-05T14:20:20Z",
+  "updated": "2026-02-05T15:45:00Z",
+  "status": "completed",
+  "confidence": "high",
+  "tags": [
+    "ice-custody-death",
+    "medical-neglect",
+    "september-2025",
+    "mexico",
+    "terminal-illness",
+    "alzheimers",
+    "kidney-cancer",
+    "hepatitis-c",
+    "mesa-arizona",
+    "humanitarian-release-denied"
+  ],
+  "summary": "Oscar Rascon Duarte, 58, of Mexico, died September 8, 2025 at Banner Desert Medical Center in Mesa, AZ after 8 months in ICE custody. Had late-stage Alzheimer's, kidney cancer, and hepatitis C at time of ICE transfer. Died from multi-organ failure. Questions about appropriateness of detaining terminally ill patient rather than humanitarian release.",
+  "sources_count": 7,
+  "related_dossiers": [
+    "2026-02-05_santos-banegas-reyes",
+    "2026-02-05_ismael-ayala-uribe",
+    "2026-02-05_norlan-guzman-fuentes"
+  ],
+  "key_facts": {
+    "date_of_death": "2025-09-08",
+    "time_of_death": "2:33 PM",
+    "location": "Banner Desert Medical Center, Mesa, Arizona",
+    "age": 58,
+    "nationality": "Mexico",
+    "cause_of_death": "Under investigation - multi-organ failure, bladder infection, lung issues",
+    "terminal_conditions": "Late-stage Alzheimer's disease, kidney cancer, hepatitis C",
+    "detention_duration": "8 months (January 6 - September 8, 2025)",
+    "detention_facility": "Promise Hospital (long-term acute care), Mesa, AZ",
+    "investigation_status": "Under investigation, no report released as of February 2026"
+  }
+}

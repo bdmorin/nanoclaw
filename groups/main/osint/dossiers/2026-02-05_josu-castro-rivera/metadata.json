@@ -1,0 +1,26 @@
+{
+  "id": "2026-02-05_josu-castro-rivera",
+  "subject": "Josué Castro Rivera",
+  "type": "ice-pursuit-death",
+  "created": "2026-02-05T14:20:51Z",
+  "updated": "2026-02-05T20:45:00Z",
+  "status": "completed",
+  "confidence": "high",
+  "tags": ["ice", "pursuit-death", "virginia", "norfolk", "honduras", "highway", "vehicle-death", "no-removal-order", "casa", "accountability", "october-2025"],
+  "summary": "Josué Castro Rivera, 24-25, Honduran national, was struck and killed by vehicle on Interstate 264 in Norfolk, Virginia on October 23, 2025 while fleeing ICE agents during 'targeted' operation. He had no removal order or criminal case pending. Family and advocacy groups demand accountability for ICE actions that created deadly situation. No federal investigation announced.",
+  "sources_count": 12,
+  "related_dossiers": [],
+  "key_findings": [
+    "No removal order at time of death - collateral arrest",
+    "ICE pursuit near active highway created foreseeable deadly risk",
+    "No federal investigation despite DOJ investigating shooting deaths",
+    "Pattern of pursuit deaths attributed to 'fleeing' rather than agency responsibility",
+    "Virginia State Police investigation limited to traffic incident, not ICE actions"
+  ],
+  "location": "Norfolk, Virginia, USA",
+  "date_of_incident": "2025-10-23",
+  "nationality": "Honduras",
+  "age": "24-25",
+  "investigations": ["Virginia State Police (traffic only)"],
+  "accountability_status": "None - no ICE discipline, no federal investigation"
+}

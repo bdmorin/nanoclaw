@@ -1,0 +1,62 @@
+{
+  "subject": "Tiago Alexandre Sousa-Martins",
+  "type": "officer-involved-shooting",
+  "status": "complete",
+  "date_of_incident": "2025-12-24",
+  "date_researched": "2026-02-05",
+  "researcher": "claude-code",
+  "confidence": "HIGH",
+  "victim": {
+    "name": "Tiago Alexandre Sousa-Martins",
+    "nationality": "Portugal",
+    "citizenship": "undocumented"
+  },
+  "second_victim": {
+    "nationality": "El Salvador",
+    "citizenship": "undocumented",
+    "injuries": "shot"
+  },
+  "incident": {
+    "date": "2025-12-24",
+    "time": "morning",
+    "location": "Glen Burnie, Maryland",
+    "county": "Anne Arundel County",
+    "agency": "ICE ERO",
+    "outcome": "non-fatal",
+    "hospitalized": true,
+    "condition": "stable",
+    "collapsed_lung": true
+  },
+  "dhs_account": {
+    "vehicle_threat_claimed": true,
+    "initial_claim": "attempted to run over officers",
+    "account_revised": true,
+    "discrepancies_acknowledged": true
+  },
+  "contradicting_evidence": {
+    "local_police_contradicted": true,
+    "agency": "Anne Arundel County Police"
+  },
+  "charges_against_victim": [
+    "resisting arrest",
+    "damaging property"
+  ],
+  "congressional_response": {
+    "senator": "Chris Van Hollen",
+    "party": "D-MD",
+    "statement": "license to kill"
+  },
+  "tags": [
+    "ice-shooting",
+    "maryland",
+    "glen-burnie",
+    "portuguese",
+    "christmas-eve",
+    "non-fatal",
+    "police-contradiction",
+    "account-revised",
+    "congressional-response",
+    "charges-against-victim"
+  ],
+  "sources_count": 7
+}

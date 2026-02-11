@@ -1,0 +1,38 @@
+{
+  "id": "2026-02-05_tien-xuan-phan",
+  "subject": "Tien Xuan Phan",
+  "type": "detention-death",
+  "created": "2026-02-05T14:28:28Z",
+  "updated": "2026-02-05T18:00:00Z",
+  "status": "complete",
+  "confidence": "medium",
+  "tags": ["2025", "vietnam", "texas", "karnes-county", "brain-bleed", "seizures", "medical-emergency", "intracranial-hemorrhage", "airlift", "ninth-death-2025", "second-vietnamese-death", "vietnamese-community", "information-gaps"],
+  "summary": "55-year-old Vietnamese citizen died Jul 19, 2025 at Texas hospital after catastrophic brain bleed while detained at Karnes County facility. 47 days in custody. Jul 18, 5:25 AM: nurse found him UNRESPONSIVE, VOMITING, SEIZURES. Rushed to Otto Kaiser Hospital, then AIRLIFTED to Methodist Hospital Northeast. Critical condition: intubated, ventilated, SEVERE BRAIN BLEED. Died 5:48 PM Jul 19. Cause: under investigation 6+ months later. SEVERE INFORMATION GAP: No data on medical history, what caused brain bleed (trauma? hypertension?), any warning signs. 9th-10th ICE death 2025, 2nd Vietnamese death (after Nhon Ngoc Nguyen). Vietnamese American Organization condemns 'medical neglect, overcrowding, systemic abuse.' Petition for independent investigation.",
+  "sources_count": 15,
+  "related_dossiers": ["2026-02-05_johnny-noviello", "2026-02-05_isidro-perez"],
+  "key_findings": {
+    "date_of_death": "2025-07-19",
+    "age": 55,
+    "nationality": "Vietnam",
+    "facility": "Karnes County Immigration Processing Center, Texas → Methodist Hospital Northeast, Live Oak, TX",
+    "time_in_custody_days": 47,
+    "official_cause": "Under investigation (6+ months, not released)",
+    "critical_failures": [
+      "Jul 18, 5:25 AM: Found unresponsive, vomiting, seizure activity",
+      "Severe brain bleed (intracranial hemorrhage)",
+      "Critical condition: intubated, ventilated",
+      "Airlifted to specialized hospital (life-threatening)",
+      "Death 36+ hours after onset",
+      "SEVERE INFORMATION GAP: No data on medical history or cause of brain bleed"
+    ],
+    "medical_emergency": "Seizures, vomiting, unresponsiveness → severe brain bleed → critical condition → death",
+    "pattern": "Sudden catastrophic neurological event, rapid deterioration, death. Cause unknown (traumatic vs. medical)",
+    "death_circumstances": "Found 5:25 AM with seizures, vomiting, unresponsive. Otto Kaiser Hospital → airlifted to Methodist Hospital Northeast. Severe brain bleed, intubated, ventilated, critical. Died 5:48 PM Jul 19.",
+    "vietnamese_community_impact": "2nd Vietnamese death in ICE custody in 2025 (after Nhon Ngoc Nguyen). Vietnamese American Organization: 'sons, fathers, war survivors' - demand independent investigation.",
+    "advocacy_response": "Vietnamese American Organization (VAO) condemns ICE for 'medical neglect, overcrowding, systemic abuse.' Freedom for Immigrants: 'deadly medical neglect.' Petition for justice and independent investigation.",
+    "investigation_status": "Cause of death under investigation 6+ months. DHS OIG and ICE OPR investigating. Medical Examiner report not released.",
+    "immigration_status": "Removal order Apr 2, 2012. Failed to depart U.S. (13 years). Arrested Jun 2, 2025.",
+    "information_gaps": "SEVERE: No medical history, no intake screening results, no events before Jul 18, no cause of brain bleed (trauma? hypertension? aneurysm?), no autopsy findings. Cannot assess medical neglect without this data.",
+    "possible_causes": "Brain bleed causes: (1) Trauma/head injury (missed or ignored), (2) Hypertension (unscreened/untreated), (3) Aneurysm rupture (unpredictable). No evidence for any - awaiting autopsy."
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "2026-02-05_abelardo-avellaneda-delgado",
+  "subject": "Abelardo Avellaneda Delgado",
+  "type": "detention-death",
+  "created": "2026-02-05T14:28:06Z",
+  "updated": "2026-02-05T18:30:00Z",
+  "status": "completed",
+  "confidence": "high",
+  "tags": ["ice", "detention-death", "transport-death", "medical-neglect", "transcor", "corecivic", "georgia", "mexico", "hypertensive-crisis", "timeline-contradiction", "congressional-inquiry", "forensic-evidence"],
+  "summary": "68-year-old grandfather died during ICE transport. Found 'cold and stiff' by EMS. Forensic evidence contradicts official timeline by 30+ minutes. Blood pressure 226/57 (stroke-level) before transport. Congressional investigation into TransCor/CoreCivic.",
+  "sources_count": 10,
+  "related_dossiers": ["2025-ice-deaths"],
+  "victim_details": {
+    "name": "Abelardo Avellaneda-Delgado",
+    "age": 68,
+    "nationality": "Mexico",
+    "immigration_status": "Unknown",
+    "medical_condition": "Hypertensive crisis (226/57 BP), deteriorated in jail",
+    "date_of_death": "2025-05-05",
+    "location_of_death": "TransCor transport van, Webster County, Georgia",
+    "cause_of_death": "Suspected aortic aneurysm (unreleased)",
+    "days_in_custody": 26
+  },
+  "facility": "Lowndes County Jail / TransCor Transport",
+  "date_of_incident": "2025-05-05",
+  "location": "Webster County, Georgia, USA"
+}

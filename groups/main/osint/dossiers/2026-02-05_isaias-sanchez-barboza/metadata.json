@@ -1,0 +1,59 @@
+{
+  "subject": "Isaias Sanchez Barboza",
+  "type": "officer-involved-shooting",
+  "status": "complete",
+  "date_of_incident": "2025-12-11",
+  "date_researched": "2026-02-05",
+  "researcher": "claude-code",
+  "confidence": "HIGH",
+  "victim": {
+    "name": "Isaias Sanchez Barboza",
+    "age": 31,
+    "nationality": "Mexico",
+    "citizenship": "undocumented"
+  },
+  "incident": {
+    "date": "2025-12-11",
+    "time_contacted": "16:14",
+    "time_struggle_reported": "16:18",
+    "time_ems_arrived": "16:37",
+    "time_pronounced_dead": "17:08",
+    "location": "Rio Grande City, Texas",
+    "county": "Starr County",
+    "coordinates_description": "5.66 miles west of Rio Grande City Port of Entry",
+    "agency": "U.S. Border Patrol",
+    "unit": "Special Operations Detachment",
+    "sector": "Rio Grande Valley",
+    "outcome": "fatal",
+    "shots_fired": 3,
+    "struggle_duration_minutes": 2
+  },
+  "dhs_account": {
+    "physical_altercation_claimed": true,
+    "self_defense_claimed": true,
+    "agent_radioed_for_help": true,
+    "medical_aid_rendered": true
+  },
+  "investigation": {
+    "lead_agency": "Texas DPS - Ranger Division",
+    "internal_review": "CBP Office of Professional Responsibility",
+    "oig_notified": true,
+    "status": "ongoing"
+  },
+  "evidence": {
+    "body_camera_referenced": false,
+    "independent_witnesses": false
+  },
+  "tags": [
+    "border-patrol-shooting",
+    "texas",
+    "rio-grande-city",
+    "starr-county",
+    "mexican-national",
+    "physical-altercation",
+    "fatal",
+    "texas-rangers-investigation",
+    "special-operations"
+  ],
+  "sources_count": 7
+}

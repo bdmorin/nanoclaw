@@ -1,0 +1,22 @@
+{
+  "id": "2026-02-05_hasan-ali-mohd-saleh",
+  "subject": "Hasan Ali Moh'D Saleh",
+  "type": "detention-death",
+  "created": "2026-02-05T14:26:10Z",
+  "updated": "2026-02-05T14:45:00Z",
+  "status": "completed",
+  "confidence": "high",
+  "tags": ["detention-death", "florida", "miami", "ice", "cardiac-arrest", "krome-detention-center", "elderly-detainee", "chronic-medical-conditions", "2025"],
+  "summary": "67-year-old Jordanian national died of cardiac arrest at Larkin Community Hospital, Miami, October 11, 2025. Had hypertension, heart disease, renal disease, and diabetes. Lived in U.S. 31 years before ICE detention. Hospitalized with fever, suffered cardiac arrest.",
+  "sources_count": 8,
+  "related_dossiers": [],
+  "date_of_incident": "2025-10-11",
+  "date_of_death": "2025-10-11",
+  "age": 67,
+  "nationality": "Jordan",
+  "location": "Miami, Florida, USA",
+  "facility": "Krome Detention Center",
+  "cause_of_death": "Cardiac arrest",
+  "time_in_us": "31 years",
+  "medical_history": ["hypertension", "heart disease", "renal disease", "diabetes"]
+}

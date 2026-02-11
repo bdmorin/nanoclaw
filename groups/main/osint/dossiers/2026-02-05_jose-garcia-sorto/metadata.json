@@ -1,0 +1,44 @@
+{
+  "subject": "Jose Garcia-Sorto",
+  "type": "officer-involved-shooting",
+  "status": "complete",
+  "date_of_incident": "2025-10-29",
+  "date_researched": "2026-02-05",
+  "researcher": "claude-code",
+  "confidence": "MEDIUM",
+  "victim": {
+    "name": "Jose Garcia-Sorto",
+    "nationality": "Honduras",
+    "citizenship": "undocumented"
+  },
+  "incident": {
+    "date": "2025-10-29",
+    "time": "04:00",
+    "location": "Phoenix, Arizona",
+    "road": "Interstate 17 near Dove Valley Road",
+    "agency": "ICE",
+    "outcome": "non-fatal",
+    "shots_fired": 2,
+    "hospitalized": true,
+    "condition": "stable"
+  },
+  "dhs_account": {
+    "vehicle_threat_claimed": true,
+    "agent_in_path_claimed": true,
+    "agent_injured": true
+  },
+  "investigation": {
+    "lead_agency": "FBI",
+    "status": "ongoing"
+  },
+  "tags": [
+    "ice-shooting",
+    "phoenix",
+    "arizona",
+    "honduran",
+    "fbi-investigation",
+    "vehicle-threat-claim",
+    "non-fatal"
+  ],
+  "sources_count": 7
+}

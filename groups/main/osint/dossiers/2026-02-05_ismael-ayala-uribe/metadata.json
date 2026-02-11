@@ -1,0 +1,46 @@
+{
+  "id": "2026-02-05_ismael-ayala-uribe",
+  "subject": "Ismael Ayala-Uribe",
+  "type": "detention-death",
+  "created": "2026-02-05T14:20:22Z",
+  "updated": "2026-02-05T15:45:00Z",
+  "status": "completed",
+  "confidence": "high",
+  "tags": [
+    "ice-custody-death",
+    "medical-neglect",
+    "september-2025",
+    "mexico",
+    "daca-recipient",
+    "adelanto-detention",
+    "sepsis",
+    "untreated-infection",
+    "wrongful-death-lawsuit",
+    "geo-group",
+    "wellpath"
+  ],
+  "summary": "Ismael Ayala-Uribe, 39, former DACA recipient, died September 22, 2025 from sepsis at Victor Valley hospital after 37 days at Adelanto ICE facility. Complained for weeks of pain but received only pain medication. Infection progressed to septic shock. Family filed wrongful death lawsuit Dec 31, 2025 against GEO Group and Wellpath for deliberate indifference.",
+  "sources_count": 16,
+  "related_dossiers": [
+    "2026-02-05_santos-banegas-reyes",
+    "2026-02-05_oscar-rascon-duarte",
+    "2026-02-05_norlan-guzman-fuentes"
+  ],
+  "key_facts": {
+    "date_of_arrest": "2025-08-17",
+    "arrest_location": "Fountain Valley Auto Wash (workplace raid)",
+    "date_of_death": "2025-09-22",
+    "time_of_death": "2:32 AM",
+    "location": "Victor Valley Global Medical Center, Victorville, California",
+    "detention_facility": "Adelanto ICE Processing Center",
+    "age": 39,
+    "nationality": "Mexico",
+    "daca_status": "Former recipient (denied 2016 after DUI)",
+    "years_in_us": 35,
+    "cause_of_death": "Cardiac arrest from sepsis (untreated infection)",
+    "detention_duration": "37 days",
+    "lawsuit_filed": "2025-12-31",
+    "defendants": "GEO Group, Wellpath LLC",
+    "brother": "Jose Ayala"
+  }
+}

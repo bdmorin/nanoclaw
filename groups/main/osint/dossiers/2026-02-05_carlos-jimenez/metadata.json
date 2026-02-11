@@ -1,0 +1,80 @@
+{
+  "subject": "Carlos Jimenez",
+  "type": "officer-involved-shooting",
+  "status": "complete",
+  "date_of_incident": "2025-10-30",
+  "date_researched": "2026-02-05",
+  "researcher": "claude-code",
+  "confidence": "HIGH",
+  "victim": {
+    "name": "Carlos Jimenez",
+    "age": 24,
+    "nationality": "USA",
+    "citizenship": "U.S. citizen",
+    "residence": "Ontario, California",
+    "occupation": "food bank/community food pantry worker",
+    "family": "father of three",
+    "criminal_record": false
+  },
+  "incident": {
+    "date": "2025-10-30",
+    "time": "06:30",
+    "location": "Ontario, California",
+    "address": "4900 block Vineyard Avenue near Baseline Avenue",
+    "near": "elementary school bus stop",
+    "agency": "ICE",
+    "outcome": "non-fatal",
+    "shot_location": "shoulder",
+    "bullet_fragments_lodged": true,
+    "fragment_locations": ["shoulder", "torso"],
+    "shot_from_behind": true,
+    "weapon_found": false
+  },
+  "context": {
+    "reason_stopped": "to warn agents about children gathering at bus stop",
+    "gun_drawn_at_head": true,
+    "agent_statement": "told him to get the f' out of here",
+    "path_blocked_by_ice_vehicles": true
+  },
+  "post_shooting": {
+    "interrogated_while_bleeding": true,
+    "interrogated_before_treatment": true,
+    "transported_handcuffed": true,
+    "still_has_fragments": true,
+    "unable_to_return_to_work": true
+  },
+  "legal": {
+    "charges_filed_against_victim": true,
+    "charge": "assault on federal officer",
+    "potential_sentence": "20 years",
+    "plea": "not guilty",
+    "arraignment_date": "2025-11-25",
+    "bond": 10000,
+    "ankle_monitor": true,
+    "case_status": "ongoing"
+  },
+  "congressional_response": {
+    "member": "Norma Torres",
+    "district": "CA-35",
+    "action": "demanded accountability"
+  },
+  "tags": [
+    "ice-shooting",
+    "california",
+    "ontario",
+    "us-citizen",
+    "food-bank-worker",
+    "father",
+    "shot-from-behind",
+    "school-bus-stop",
+    "good-samaritan",
+    "interrogated-while-injured",
+    "charges-pending",
+    "non-fatal"
+  ],
+  "sources_count": 12,
+  "related_cases": [
+    "marimar-martinez",
+    "carlitos-parias"
+  ]
+}

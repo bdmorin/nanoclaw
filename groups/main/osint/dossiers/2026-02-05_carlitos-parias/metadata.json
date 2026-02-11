@@ -1,0 +1,90 @@
+{
+  "subject": "Carlitos Ricardo Parias",
+  "aliases": ["Richard LA"],
+  "type": "officer-involved-shooting",
+  "status": "complete",
+  "date_of_incident": "2025-10-21",
+  "date_researched": "2026-02-05",
+  "researcher": "claude-code",
+  "confidence": "HIGH",
+  "victim": {
+    "name": "Carlitos Ricardo Parias",
+    "age": 44,
+    "nationality": "Mexico",
+    "citizenship": "undocumented",
+    "occupation": "TikTok content creator / citizen journalist",
+    "social_media": {
+      "platform": "TikTok",
+      "username": "Richard LA",
+      "followers": 340000
+    },
+    "criminal_record": false,
+    "activism": "documented ICE operations"
+  },
+  "incident": {
+    "date": "2025-10-21",
+    "time": "08:52",
+    "location": "South Los Angeles, California",
+    "address": "400 block East 20th Street near Trinity Street",
+    "agency": "ICE",
+    "additional_agency": "U.S. Marshals",
+    "outcome": "non-fatal",
+    "shots_fired": true,
+    "wounds": 1,
+    "wound_location": "elbow",
+    "weapon_found": false,
+    "other_injuries": "Deputy U.S. Marshal wounded by ricochet"
+  },
+  "evidence_issues": {
+    "bodycam_contradicts_narrative": true,
+    "bodycam_shows_car_stationary": true,
+    "government_claimed_ramming": true,
+    "video_released_late": true,
+    "denial_of_counsel": true
+  },
+  "legal": {
+    "charges_filed": true,
+    "charges": [
+      "assault on federal officer using deadly weapon",
+      "depredation of government property"
+    ],
+    "plea": "not guilty",
+    "charges_dismissed": true,
+    "dismissed_with_prejudice": true,
+    "dismissal_date": "2025-12-28",
+    "judge": "Fernando M. Olguin",
+    "dismissal_reasons": [
+      "denial of access to counsel",
+      "failure to release body camera footage",
+      "failure to meet court deadlines"
+    ]
+  },
+  "detention": {
+    "still_detained": true,
+    "facility": "Adelanto ICE Processing Center",
+    "operator": "GEO Group",
+    "reason": "immigration proceedings"
+  },
+  "recognition": {
+    "la_city_council_award": true,
+    "award_date": "2025-08-15",
+    "district": 9
+  },
+  "tags": [
+    "ice-shooting",
+    "los-angeles",
+    "activist-targeted",
+    "tiktok",
+    "citizen-journalist",
+    "charges-dismissed",
+    "denial-of-counsel",
+    "bodycam-contradicts-dhs",
+    "still-detained",
+    "non-fatal"
+  ],
+  "sources_count": 12,
+  "related_cases": [
+    "marimar-martinez",
+    "silverio-villegas-gonzalez"
+  ]
+}

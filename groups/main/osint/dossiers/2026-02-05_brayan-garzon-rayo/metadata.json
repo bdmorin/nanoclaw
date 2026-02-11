@@ -1,0 +1,27 @@
+{
+  "id": "2026-02-05_brayan-garzon-rayo",
+  "subject": "Brayan Garzon-Rayo",
+  "type": "detention-death",
+  "created": "2026-02-05T13:06:50Z",
+  "updated": "2026-02-05T13:30:00Z",
+  "status": "complete",
+  "confidence": "high",
+  "tags": ["2025", "colombia", "missouri", "phelps-county-jail", "suicide", "mental-health-failure", "ice-protocols-violated", "tuberculosis", "covid-19", "fifth-death-2025"],
+  "summary": "27-year-old Colombian man who fled violence with mother to St. Louis died Apr 8, 2025 after suicide attempt at Phelps County Jail (Rolla, MO). **ICE'S OWN DEATH REPORT ADMITS PROTOCOLS VIOLATED**. Mental health evaluation scheduled 3 times, NEVER conducted (cancelled Apr 4: short-staffed, Apr 5: COVID-positive, never rescheduled). Had TB diagnosis, COVID-positive, severe stomach pain, previous self-harm reported - ALL ignored. Found unresponsive Apr 7 with blanket around neck. Brain dead Apr 8. 14 days in custody, 100 miles from family. ENTIRELY PREVENTABLE.",
+  "sources_count": 15,
+  "related_dossiers": ["2026-02-05_serawit-gezahegn-dejene", "2026-02-05_victor-manuel-diaz", "2026-02-05_heber-sanchez-dominguez"],
+  "key_findings": {
+    "date_of_death": "2025-04-08",
+    "age": 27,
+    "nationality": "Colombia",
+    "facility": "Phelps County Jail, Rolla, Missouri (ICE contract)",
+    "time_in_custody_days": 14,
+    "official_cause": "Suicide by asphyxiation",
+    "critical_failures": ["Mental health evaluation scheduled 3 times, never conducted", "ICE protocols violated (ICE admission)", "Previous self-harm ignored", "TB + COVID + pain all inadequately treated"],
+    "mental_health_timeline": "Apr 4: cancelled (short staff), Apr 5: cancelled (COVID), never rescheduled",
+    "medical_conditions": ["Tuberculosis (diagnosed Mar 29)", "COVID-19 positive", "Severe stomach pain ongoing", "Mental health crisis"],
+    "pattern": "Documented protocol violations, preventable suicide, ICE admits failures",
+    "ice_admission": "ICE death report: 'Records later showed ICE had not followed its own medical protocols before Garzón-Rayo attempted to take his own life'",
+    "public_health_risk": "Second TB case in 2025 detention (after Serawit Dejene)"
+  }
+}

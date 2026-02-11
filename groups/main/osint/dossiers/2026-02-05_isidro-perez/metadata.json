@@ -1,0 +1,46 @@
+{
+  "id": "2026-02-05_isidro-perez",
+  "subject": "Isidro Pérez",
+  "type": "detention-death",
+  "created": "2026-02-05T14:25:49Z",
+  "updated": "2026-02-05T17:00:00Z",
+  "status": "complete",
+  "confidence": "high",
+  "tags": ["2025", "cuba", "florida", "krome-detention-center", "cardiac-failure", "unstable-angina", "medical-neglect", "overcrowding", "floor-sleeping", "elderly-detainee", "40-year-old-marijuana-conviction", "thirteenth-death-2025", "fifth-florida-death"],
+  "summary": "75-year-old Cuban who lived in U.S. 59 years (since age 16) died Jun 26, 2025 at Florida hospital, 21 days in ICE custody. Arrested based on 40-year-old marijuana convictions (1981, 1984). Had weak heart, multiple previous heart attacks. Day 12: hospitalized with UNSTABLE ANGINA (8 days at Larkin Hospital). Jun 25: discharged back to Krome. Family reports: sleeping on FLOOR in overcrowded facility. Jun 26 (~7 PM, <24 hrs after discharge): chest pain recurs. 8:42 PM: DEAD at HCA Kendall Hospital. Cause: 'undetermined' 7+ months later. 13th ICE death 2025, 5th in Florida (HALF of all 2025 deaths), 2nd at Krome. ENTIRELY PREVENTABLE.",
+  "sources_count": 18,
+  "related_dossiers": ["2026-02-05_johnny-noviello", "2026-02-05_tien-xuan-phan"],
+  "key_findings": {
+    "date_of_death": "2025-06-26",
+    "age": 75,
+    "nationality": "Cuba (lived in U.S. 59 years)",
+    "facility": "Krome Service Processing Center, Miami → HCA Kendall Hospital",
+    "time_in_custody_days": 21,
+    "official_cause": "Undetermined (under investigation 7+ months)",
+    "critical_timeline": "Hospital discharge to death: 25 hours",
+    "critical_failures": [
+      "75-year-old cardiac patient arrested for 40-year-old marijuana conviction",
+      "Day 12: Hospitalized with unstable angina (life-threatening, 8 days treatment)",
+      "Jun 25: Discharged to overcrowded detention (sleeping on floor)",
+      "Jun 26: Chest pain recurs <24 hours after discharge",
+      "Jun 26: Dead 25 hours after hospital discharge",
+      "Inadequate post-hospital cardiac monitoring",
+      "Overcrowded facility (floor sleeping) for cardiac patient"
+    ],
+    "medical_conditions": [
+      "Weak heart (per family)",
+      "Multiple previous heart attacks",
+      "Unstable angina (Jun 17 hospitalization)",
+      "Shoulder fracture",
+      "Car accident injuries",
+      "Could barely walk (per family)"
+    ],
+    "pattern": "Elderly cardiac patient, hospitalized for unstable angina, discharged to inadequate detention conditions, death within 24 hours",
+    "detention_conditions": "Family reports: Sleeping on floor in severely overcrowded facility without enough beds at Krome",
+    "death_circumstances": "Reported chest pain ~7 PM (Day 21, <24 hrs post-hospital). Miami-Dade Rescue: AED, CPR, responded to revival. Transported to Kendall Hospital. Pronounced dead 8:42 PM.",
+    "family_advocacy": "Stepdaughter Alba Patricia Gomez: 'He was like a bird that didn't want to be caged up. I don't understand what's really going on, we're all human. Why are they picking up 75-year-old people?' Maria Alaniz: 'I am no one to judge, but it really hurts me, what is happening.'",
+    "investigation_status": "Cause of death 'undetermined' 7+ months after death. DHS OIG and ICE OPR investigating. Medical Examiner report not released.",
+    "criminal_history": "Feb 10, 1981 and Jan 25, 1984: Marijuana possession convictions (1,500 lbs bust). Served 18 months prison. 40+ years ago. Lived lawfully 1984-2025.",
+    "florida_crisis": "5th death in Florida ICE custody in 2025. Half of all 2025 ICE custody deaths nationwide occurred in Florida."
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "2026-02-05_genry-ruiz-guillen",
+  "subject": "Genry Ruiz Guillen",
+  "type": "detention-death",
+  "created": "2026-02-05T09:54:03Z",
+  "updated": "2026-02-05T09:45:00Z",
+  "status": "complete",
+  "confidence": "high",
+  "tags": ["2025", "honduras", "krome", "rhabdomyolysis", "medical-neglect", "autopsy-disputed", "first-death-2025"],
+  "summary": "29-year-old Honduran construction worker died Jan 23, 2025 after 51 days in ICE custody at Krome. Weeks of reporting dizziness/fainting, developed rhabdomyolysis. ICE claims death from 'schizoaffective disorder complications' but former NYC Chief ME Baden disputes, noting 'too many drugs' and rhabdomyolysis 'can develop in people who have been restrained.' First death of 2025.",
+  "sources_count": 16,
+  "related_dossiers": ["2026-02-05_serawit-gezahegn-dejene"],
+  "key_findings": {
+    "date_of_death": "2025-01-23",
+    "age": 29,
+    "nationality": "Honduras",
+    "facility": "Krome Service Processing Center, Miami, FL",
+    "time_in_custody_days": 86,
+    "official_cause": "Complications of schizoaffective disorder",
+    "disputed_by": "Dr. Michael Baden, Former NYC Chief Medical Examiner",
+    "critical_condition": "Rhabdomyolysis (muscle breakdown)",
+    "pattern": "Weeks of symptoms, inadequate care, delayed hospitalization"
+  }
+}

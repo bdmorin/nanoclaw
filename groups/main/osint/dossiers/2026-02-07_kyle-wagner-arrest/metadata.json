@@ -1,0 +1,34 @@
+{
+  "subject": "Kyle Wagner - Federal Arrest for Anti-ICE Activism",
+  "date_created": "2026-02-07",
+  "status": "active",
+  "type": "federal_arrest",
+  "incident_date": "2026-02-05",
+  "location": "Minneapolis, Minnesota",
+  "agencies_involved": ["Homeland Security Investigations (HSI)", "Department of Justice", "FBI"],
+  "subject_details": {
+    "name": "Kyle Wagner",
+    "age": 37,
+    "location": "Minneapolis, Minnesota",
+    "activism_focus": "Anti-ICE, antifascist resistance",
+    "social_media": "@kaos.follows (Instagram, deleted post-arrest)"
+  },
+  "charges": {
+    "federal": [
+      "Cyberstalking (18 USC)",
+      "Interstate threatening communications"
+    ],
+    "jurisdiction": "U.S. District Court, Eastern District of Michigan",
+    "status": "Complaint filed, indictment pending"
+  },
+  "legal_representation": "Unknown/TBD",
+  "significance": "First major federal arrest of anti-ICE activist post-Operation Metro Surge; template for future activist targeting; charged under counterterrorism rhetoric",
+  "threat_assessment_for_similar_activists": "EXTREME - demonstrates federal willingness to use cyberstalking/doxxing statutes against protest organizers; charged in Michigan (doxxing victim location) not Minnesota (activist location); HSI raid with heavy armament; 'terrorist' labeling by Trump officials",
+  "sources_count": 10,
+  "confidence": "HIGH",
+  "related_dossiers": [
+    "2026-02-05_alex-pretti",
+    "2026-02-05_renee-good"
+  ],
+  "tags": ["federal_arrest", "antifa", "cyberstalking", "minneapolis", "operation_metro_surge", "activist_repression", "counterterrorism", "doxxing", "HSI"]
+}

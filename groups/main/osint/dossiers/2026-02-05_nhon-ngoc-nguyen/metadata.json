@@ -1,0 +1,27 @@
+{
+  "id": "2026-02-05_nhon-ngoc-nguyen",
+  "subject": "Nhon Ngoc Nguyen",
+  "type": "detention-death",
+  "created": "2026-02-05T14:20:31Z",
+  "updated": "2026-02-05T17:30:00Z",
+  "status": "completed",
+  "confidence": "high",
+  "tags": ["ice", "detention-death", "medical-neglect", "dementia", "el-paso", "vietnam", "refugee", "2025", "pneumonia", "dnr", "family-separation"],
+  "summary": "Vietnamese refugee with dementia died of pneumonia after 52 days in ICE custody. Family alleges medical neglect, communication failures, and inappropriate detention of cognitively impaired individual.",
+  "sources_count": 9,
+  "related_dossiers": ["2025-ice-deaths"],
+  "victim_details": {
+    "name": "Nhon Ngoc Nguyen",
+    "age": 55,
+    "nationality": "Vietnam",
+    "immigration_status": "Legal Permanent Resident",
+    "medical_condition": "Dementia, altered mental status",
+    "date_of_death": "2025-04-16",
+    "location_of_death": "Long Term Acute Care Hospital, El Paso, Texas",
+    "cause_of_death": "Acute pneumonia",
+    "days_in_custody": 52
+  },
+  "facility": "El Paso Processing Center",
+  "date_of_incident": "2025-04-16",
+  "location": "El Paso, Texas, USA"
+}

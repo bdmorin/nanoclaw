@@ -1,0 +1,55 @@
+{
+  "subject": "Felix Bauckholt",
+  "type": "officer-involved-shooting",
+  "status": "complete",
+  "date_of_incident": "2025-01-20",
+  "date_researched": "2026-02-05",
+  "researcher": "claude-code",
+  "confidence": "HIGH",
+  "case_note": "DIFFERENT FROM OTHER CASES - return fire after companion killed BP agent. Appears legitimate defensive force.",
+  "victim": {
+    "name": "Felix Bauckholt",
+    "nationality": "Germany",
+    "affiliation": "Zizian cult"
+  },
+  "companion": {
+    "name": "Teresa Youngblut",
+    "age": 21,
+    "residence": "Washington state",
+    "affiliation": "Zizian cult",
+    "charges": "murder of federal agent",
+    "death_penalty_sought": true
+  },
+  "agent_killed": {
+    "name": "David 'Chris' Maland",
+    "agency": "U.S. Border Patrol, Swanton Sector",
+    "cause_of_death": "shot in neck by Youngblut"
+  },
+  "incident": {
+    "date": "2025-01-20",
+    "location": "Coventry, Vermont",
+    "road": "Interstate 91 southbound",
+    "agency": "U.S. Border Patrol",
+    "outcome": "fatal - both agent and Bauckholt killed",
+    "shots_by_suspects": 2,
+    "shots_by_agents": 7,
+    "context": "traffic stop after surveillance"
+  },
+  "assessment": {
+    "disputed_force": false,
+    "return_fire": true,
+    "agent_killed_first": true,
+    "suspects_armed": true
+  },
+  "tags": [
+    "border-patrol-shooting",
+    "vermont",
+    "agent-killed",
+    "return-fire",
+    "zizian-cult",
+    "german-national",
+    "fatal",
+    "death-penalty-case"
+  ],
+  "sources_count": 6
+}

@@ -1,0 +1,26 @@
+{
+  "id": "2026-02-05_maksym-chernyak",
+  "subject": "Maksym Chernyak",
+  "type": "detention-death",
+  "created": "2026-02-05T11:57:24Z",
+  "updated": "2026-02-05T11:05:00Z",
+  "status": "complete",
+  "confidence": "high",
+  "tags": ["2025", "ukraine", "krome", "stroke", "911-delay", "wrongful-death-lawsuit", "humanitarian-parolee", "third-death-2025"],
+  "summary": "44-year-old Ukrainian humanitarian parolee (fled Russian invasion) died Feb 20, 2025 after stroke at Krome. Staff delayed calling 911 for 40-45 minutes during neurological emergency (vomiting, seizure, unresponsiveness), believing he was 'intoxicated.' Neurologist: 'No medical professional activated 911' for 45 minutes. Brain damage irreversible by hospital arrival. Brain death Feb 19, died Feb 20. Wrongful death lawsuit in preparation. Third death at Krome in 28 days.",
+  "sources_count": 13,
+  "related_dossiers": ["2026-02-05_genry-ruiz-guillen", "2026-02-05_serawit-gezahegn-dejene"],
+  "key_findings": {
+    "date_of_death": "2025-02-20",
+    "age": 44,
+    "nationality": "Ukraine",
+    "facility": "Krome Service Processing Center, Miami, FL",
+    "time_in_custody_days": 18,
+    "official_cause": "Bleeding from the brain (hemorrhagic stroke)",
+    "critical_failure": "40-45 minute delay calling 911 during stroke",
+    "misdiagnosis": "Staff thought 'intoxicated' despite stroke symptoms",
+    "pattern": "Time-sensitive emergency, delayed response, preventable death",
+    "legal_status": "Ukrainian Humanitarian Parolee (legal until Aug 2026)",
+    "lawsuit": "Wrongful death lawsuit in preparation by widow"
+  }
+}

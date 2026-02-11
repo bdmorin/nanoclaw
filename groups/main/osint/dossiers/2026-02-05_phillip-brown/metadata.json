@@ -1,0 +1,80 @@
+{
+  "subject": "Phillip M. Brown",
+  "type": "officer-involved-shooting",
+  "status": "complete",
+  "date_of_incident": "2025-10-17",
+  "date_researched": "2026-02-05",
+  "researcher": "claude-code",
+  "confidence": "HIGH",
+  "victim": {
+    "name": "Phillip M. Brown",
+    "age": 33,
+    "race": "Black",
+    "nationality": "USA",
+    "citizenship": "U.S. citizen",
+    "residence": "Hyattsville, Maryland",
+    "criminal_record": false
+  },
+  "incident": {
+    "date": "2025-10-17",
+    "location": "Washington, D.C.",
+    "address": "Benning Road",
+    "agency": "Homeland Security Investigations (HSI)",
+    "context": "Trump law enforcement surge",
+    "outcome": "non-fatal - not struck",
+    "shots_fired": 3,
+    "shots_hit_victim": 0,
+    "bullet_locations": [
+      "driver side window",
+      "passenger seat",
+      "jacket collar"
+    ],
+    "weapon_found": false,
+    "traffic_stop_reason": [
+      "tinted windows",
+      "missing front license plate"
+    ]
+  },
+  "cover_up": {
+    "documented": true,
+    "officer_testified_to_instruction": true,
+    "officer_name": "Jason Sterling",
+    "instruction": "omit shooting from report",
+    "given_by": "team leader",
+    "reason_given": "upcoming internal affairs investigation",
+    "prosecutor_informed": false,
+    "body_camera_withheld": true
+  },
+  "legal": {
+    "victim_charges_filed": true,
+    "victim_charges": "fleeing from law enforcement",
+    "victim_charges_dismissed": true,
+    "dismissal_date": "2025-10-21",
+    "judge": "Carmen McLean",
+    "days_jailed": 4,
+    "agent_charges_filed": false,
+    "agent_charges_declined_reason": "victim not struck by gunfire"
+  },
+  "tags": [
+    "hsi-shooting",
+    "washington-dc",
+    "cover-up-documented",
+    "officer-testimony",
+    "charges-dismissed",
+    "no-accountability",
+    "black-victim",
+    "trump-surge",
+    "non-fatal",
+    "body-camera-withheld"
+  ],
+  "sources_count": 11,
+  "related_cases": [
+    "marimar-martinez",
+    "carlitos-parias"
+  ],
+  "key_quotes": {
+    "officer_instruction": "instructed by team leader not to include the shooting in his report",
+    "victim_statement": "I don't even want to go outside",
+    "defense_attorney": "I've never heard of that"
+  }
+}

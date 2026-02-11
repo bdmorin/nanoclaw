@@ -1,0 +1,39 @@
+{
+  "id": "2026-02-05_norlan-guzman-fuentes",
+  "subject": "Norlan Guzman-Fuentes",
+  "type": "ice-shooting",
+  "created": "2026-02-05T14:20:20Z",
+  "updated": "2026-02-05T15:45:00Z",
+  "status": "completed",
+  "confidence": "high",
+  "tags": [
+    "ice-custody-death",
+    "dallas-shooting",
+    "september-2025",
+    "el-salvador",
+    "activist-violence",
+    "joshua-jahn",
+    "restrained-victims",
+    "anti-ice-attack"
+  ],
+  "summary": "Norlan Guzman-Fuentes, 37, of El Salvador, was shot and killed on September 24, 2025 by anti-ICE activist Joshua Jahn who attacked ICE detainees at Dallas field office. Two other detainees also shot; one died later. Victims were restrained in van and unable to escape. CRITICAL: This was NOT an ICE agent shooting - activist killed the people he claimed to protect.",
+  "sources_count": 15,
+  "related_dossiers": [
+    "miguel-angel-garcia-hernandez",
+    "jose-andres-bordones-molina",
+    "2026-02-05_santos-banegas-reyes",
+    "2026-02-05_ismael-ayala-uribe",
+    "2026-02-05_oscar-rascon-duarte"
+  ],
+  "key_facts": {
+    "date_of_death": "2025-09-24",
+    "location": "ICE Field Office, Dallas, Texas",
+    "age": 37,
+    "nationality": "El Salvador",
+    "cause_of_death": "Gunshot wounds from activist attack",
+    "shooter": "Joshua Jahn, 29, anti-ICE activist (suicide)",
+    "detention_duration": "Unknown",
+    "family_notified": "Delayed - family expressed outrage",
+    "investigation_status": "FBI investigating as attack on federal facility"
+  }
+}

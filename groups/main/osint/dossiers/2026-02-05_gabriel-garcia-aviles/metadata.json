@@ -1,0 +1,30 @@
+{
+  "id": "2026-02-05_gabriel-garcia-aviles",
+  "subject": "Gabriel Garcia-Aviles",
+  "type": "detention-death",
+  "created": "2026-02-05T14:20:52Z",
+  "updated": "2026-02-05T20:45:00Z",
+  "status": "completed",
+  "confidence": "high",
+  "tags": ["ice", "detention-death", "medical-neglect", "adelanto", "california", "alcohol-withdrawal", "geo-group", "congressional-investigation", "gross-negligence", "october-2025"],
+  "summary": "Gabriel Garcia-Aviles, 54-56, Mexican national with 30+ years in U.S., died October 23, 2025 from cardiac arrest due to alcohol withdrawal syndrome at Victor Valley Global Medical Center. Arrested October 15, immediately hospitalized from Adelanto ICE Processing Center. Family not notified for 8 days, found him unconscious with head injuries. 43 congressional representatives signed letter accusing ICE of 'gross negligence'. Second death at Adelanto in one month.",
+  "sources_count": 10,
+  "related_dossiers": ["2026-02-05_ismael-ayala-uribe"],
+  "key_findings": [
+    "Alcohol withdrawal syndrome is preventable with proper medical care - death was avoidable",
+    "Family not notified for 8 days despite critical condition",
+    "Daughter found him unconscious, intubated, with dried blood on forehead - suggests physical trauma",
+    "Congressional letter signed by 43 representatives accuses ICE of 'gross negligence'",
+    "Second death at Adelanto in one month (after Ismael Ayala-Uribe in September)",
+    "Part of 2025 surge: 25 deaths by October vs 36 in all of Trump's first term",
+    "Private contractor GEO Group operates facility with pattern of medical neglect"
+  ],
+  "location": "Adelanto ICE Processing Center, California (died at Victor Valley Global Medical Center)",
+  "date_of_incident": "2025-10-23",
+  "nationality": "Mexico",
+  "age": "54-56",
+  "time_in_us": "30+ years",
+  "investigations": ["Congressional inquiry (43 representatives)"],
+  "accountability_status": "Pending - congressional letter demanding investigation, no disciplinary actions taken",
+  "facility": "Adelanto ICE Processing Center (operated by GEO Group)"
+}

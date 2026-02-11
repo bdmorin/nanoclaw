@@ -1,0 +1,13 @@
+{
+  "id": "2026-02-05_parady-la",
+  "subject": "Parady La",
+  "type": "incident",
+  "created": "2026-02-05T05:04:00Z",
+  "updated": "2026-02-05T05:04:00Z",
+  "status": "active",
+  "confidence": "low",
+  "tags": [],
+  "summary": "",
+  "sources_count": 0,
+  "related_dossiers": []
+}

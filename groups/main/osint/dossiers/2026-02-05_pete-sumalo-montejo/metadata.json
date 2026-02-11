@@ -1,0 +1,25 @@
+{
+  "id": "2026-02-05_pete-sumalo-montejo",
+  "subject": "Pete Sumalo Montejo",
+  "type": "detention-death",
+  "created": "2026-02-05T14:25:00Z",
+  "updated": "2026-02-05T14:45:00Z",
+  "status": "completed",
+  "confidence": "high",
+  "tags": ["december-2025", "septic-shock", "pneumonia", "elderly", "lpr", "philippines", "montgomery-processing-center"],
+  "summary": "Pete Sumalo Montejo, 72, LPR since 1962, died Dec 5, 2025 from septic shock/pneumonia after 284 days in custody. Multiple hospitalizations June-Nov. Elderly detainee with recurrent infections - preventable death.",
+  "sources_count": 7,
+  "related_dossiers": ["december-2025-pattern"],
+  "victim_details": {
+    "name": "Pete Sumalo Montejo",
+    "age": 72,
+    "country": "Philippines",
+    "date_of_death": "2025-12-05",
+    "location_of_death": "Valley Baptist Medical Center, Harlingen, TX",
+    "facility": "Montgomery Processing Center, Conroe, TX",
+    "days_in_custody": 284,
+    "immigration_status": "Lawful Permanent Resident since 1962",
+    "cause_official": "Septic shock and pneumonia",
+    "cause_actual": "Medical neglect - recurrent infections in elderly detainee"
+  }
+}

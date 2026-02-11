@@ -1,0 +1,82 @@
+{
+  "subject": "Raymond Mattia",
+  "type": "officer-involved-shooting",
+  "status": "complete",
+  "date_of_incident": "2023-05-18",
+  "date_researched": "2026-02-05",
+  "researcher": "claude-code",
+  "confidence": "HIGH",
+  "note": "Queue listed May 2025; actual incident May 2023. Included due to ongoing relevance.",
+  "victim": {
+    "name": "Raymond Mattia",
+    "age": 58,
+    "nationality": "USA",
+    "citizenship": "U.S. citizen",
+    "tribal_affiliation": "Tohono O'odham Nation",
+    "residence": "Menager's Dam, Tohono O'odham Nation, Arizona",
+    "criminal_record": false
+  },
+  "incident": {
+    "date": "2023-05-18",
+    "location": "Menager's Dam Village, Tohono O'odham Nation, Arizona",
+    "agency": "U.S. Border Patrol",
+    "sector": "Tucson Sector Ajo Station",
+    "outcome": "fatal",
+    "shots_fired": 38,
+    "shots_hit_victim": 9,
+    "weapon_found": false,
+    "victim_had_weapon_when_shot": false,
+    "weapon_discarded": "sheathed machete/knife thrown away before shooting"
+  },
+  "agents": {
+    "named_in_lawsuit": [
+      "Scott Whitehouse",
+      "Dan Sifuentes",
+      "Ivan Torralva"
+    ]
+  },
+  "body_camera": {
+    "released": true,
+    "release_date": "2023-06",
+    "duration": "23 minutes (edited)",
+    "shows_conflicting_commands": true,
+    "shows_hands_raised": true,
+    "shows_weapon_discarded": true
+  },
+  "legal": {
+    "doj_prosecution": false,
+    "prosecution_declined_reason": "determined shooting did not violate state or federal criminal law",
+    "civil_lawsuit_filed": true,
+    "lawsuit_filed_date": "2024-05",
+    "lawsuit_amount": 15000000,
+    "claims": [
+      "excessive use of force",
+      "assault",
+      "battery",
+      "negligence",
+      "constitutional rights violations (Bivens)",
+      "Federal Tort Claims Act violations"
+    ],
+    "lawsuit_status": "proceeding - partially allowed to move forward August 2025"
+  },
+  "tribal_response": {
+    "tribe": "Tohono O'odham Nation",
+    "statement": "a travesty of justice",
+    "protested_decision": true
+  },
+  "tags": [
+    "border-patrol-shooting",
+    "arizona",
+    "tohono-oodham",
+    "unarmed-victim",
+    "us-citizen",
+    "tribal-member",
+    "fatal",
+    "no-prosecution",
+    "civil-lawsuit",
+    "excessive-force",
+    "38-rounds-fired"
+  ],
+  "sources_count": 12,
+  "related_cases": []
+}

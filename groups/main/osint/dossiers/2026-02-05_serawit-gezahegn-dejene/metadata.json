@@ -1,0 +1,24 @@
+{
+  "id": "2026-02-05_serawit-gezahegn-dejene",
+  "subject": "Serawit Gezahegn Dejene",
+  "type": "detention-death",
+  "created": "2026-02-05T10:53:04Z",
+  "updated": "2026-02-05T10:15:00Z",
+  "status": "complete",
+  "confidence": "high",
+  "tags": ["2025", "ethiopia", "eloy", "hiv-aids", "tuberculosis", "medical-neglect", "public-health-crisis", "second-death-2025"],
+  "summary": "45-year-old Ethiopian asylum seeker died Jan 29, 2025 after 161 days at Eloy Detention Center. Abnormal pulse noted at intake but no follow-up for 4 months. Collapsed Dec 19 with 20% weight loss. Diagnosed with advanced HIV/AIDS, TB, and multiple opportunistic infections - all preventable with proper screening and care. ME cause: complications of multiple infections with HIV. Died 6 days after first 2025 death (Genry Ruiz Guillen).",
+  "sources_count": 14,
+  "related_dossiers": ["2026-02-05_genry-ruiz-guillen"],
+  "key_findings": {
+    "date_of_death": "2025-01-29",
+    "age": 45,
+    "nationality": "Ethiopia",
+    "facility": "Eloy Detention Center, Arizona",
+    "time_in_custody_days": 161,
+    "official_cause": "Complications of multiple infections in the setting of HIV",
+    "critical_conditions": ["HIV/AIDS (advanced)", "Tuberculosis", "Pneumocystis pneumonia", "Toxoplasmosis", "Multiple opportunistic infections"],
+    "pattern": "HIV/TB undiagnosed at intake, abnormal pulse ignored 4 months, 20% weight loss, preventable death",
+    "public_health_risk": "TB exposure in detention facility - highly contagious"
+  }
+}

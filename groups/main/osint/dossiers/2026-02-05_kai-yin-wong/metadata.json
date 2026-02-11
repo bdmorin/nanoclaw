@@ -1,0 +1,32 @@
+{
+  "id": "2026-02-05_kai-yin-wong",
+  "subject": "Kai Yin Wong",
+  "type": "detention-death",
+  "created": "2026-02-05T14:20:53Z",
+  "updated": "2026-02-05T20:45:00Z",
+  "status": "completed",
+  "confidence": "high",
+  "tags": ["ice", "detention-death", "medical-complications", "heart-surgery", "texas", "san-antonio", "china", "convicted-sex-offender", "cardiac-tamponade", "surgical-complications", "october-2025"],
+  "summary": "Kai Yin Wong, 63, Chinese national and LPR, died October 25, 2025 at Methodist Metropolitan Hospital in San Antonio from complications of heart valve replacement surgery. In ICE custody 18 months pending deportation after serving 14+ years for child sex abuse. Emergency hospitalization October 11 for heart failure, surgery October 23 developed cardiac tamponade. Family requested withdrawal of life support October 25. Questions about medical care quality and informed consent for detainees.",
+  "sources_count": 7,
+  "related_dossiers": [],
+  "key_findings": [
+    "18 months in ICE custody before acute medical crisis - questions about monitoring",
+    "Heart valve surgery 12 days after emergency hospitalization - appropriateness questioned",
+    "Cardiac tamponade complication suggests surgical issues or patient intolerance",
+    "Death within 2 days of surgery",
+    "Family present and made end-of-life decision (unlike many other cases)",
+    "Convicted child sex offender - criminal history complicates advocacy but doesn't negate ICE duty of care",
+    "Part of pattern where 1 in 4 ICE detention deaths are Asian detainees"
+  ],
+  "location": "Methodist Metropolitan Hospital, San Antonio, Texas (detained in South Texas facility)",
+  "date_of_incident": "2025-10-25",
+  "nationality": "China",
+  "age": "63",
+  "immigration_status": "Lawful Permanent Resident (admitted 1970), removal order issued May 15, 2024",
+  "criminal_history": "Convicted March 16, 2010 of continuous sexual abuse of a child, served 14+ years in California state prison",
+  "investigations": ["None announced"],
+  "accountability_status": "None - no investigation, no scrutiny due to criminal history",
+  "hospital": "Methodist Metropolitan Hospital, San Antonio, Texas",
+  "medical_cause": "Cardiac tamponade following mitral valve replacement surgery"
+}

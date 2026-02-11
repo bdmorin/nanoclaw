@@ -1,0 +1,80 @@
+{
+  "subject": "Marimar Martinez",
+  "type": "officer-involved-shooting",
+  "status": "complete",
+  "date_of_incident": "2025-10-04",
+  "date_researched": "2026-02-05",
+  "researcher": "claude-code",
+  "confidence": "HIGH",
+  "victim": {
+    "name": "Marimar Martinez",
+    "age": 30,
+    "nationality": "USA",
+    "citizenship": "U.S. citizen",
+    "occupation": "teaching assistant",
+    "criminal_record": false
+  },
+  "incident": {
+    "date": "2025-10-04",
+    "location": "Brighton Park, Chicago, Illinois",
+    "address": "39th Street and Kedzie Avenue",
+    "agency": "U.S. Border Patrol",
+    "operation": "Operation Midway Blitz",
+    "outcome": "non-fatal",
+    "shots_fired": 5,
+    "wounds": 7,
+    "weapon_found": false
+  },
+  "agent": {
+    "name": "Charles Exum",
+    "agency": "U.S. Border Patrol",
+    "home_base": "Maine"
+  },
+  "evidence_issues": {
+    "bodycam_contradicts_narrative": true,
+    "agent_bragging_texts": true,
+    "evidence_tampering_alleged": true,
+    "vehicle_driven_to_maine": true,
+    "mechanic_worked_on_vehicle": true,
+    "trophy_photo_taken": true
+  },
+  "legal": {
+    "charges_filed": true,
+    "charges": "assaulting, impeding and interfering with federal law enforcement",
+    "charges_dismissed": true,
+    "dismissed_with_prejudice": true,
+    "dismissal_date": "2025-11-20",
+    "judge": "Georgia Alexakis",
+    "prosecutor": "Andrew Boutros",
+    "co_defendant": "Anthony Ian Santos Ruiz"
+  },
+  "congressional_response": {
+    "testimony_given": true,
+    "testimony_date": "2026-02-03",
+    "location": "Dirksen Senate Office Building",
+    "texts_read_into_record": true
+  },
+  "tags": [
+    "border-patrol-shooting",
+    "chicago",
+    "operation-midway-blitz",
+    "charges-dismissed",
+    "evidence-tampering",
+    "bodycam-contradicts-dhs",
+    "us-citizen",
+    "agent-bragging",
+    "congressional-testimony",
+    "non-fatal"
+  ],
+  "sources_count": 13,
+  "related_cases": [
+    "silverio-villegas-gonzalez",
+    "renee-good",
+    "alex-pretti"
+  ],
+  "key_quotes": {
+    "agent_text_1": "I fired 5 rounds and she had 7 holes. Put that in your book boys",
+    "agent_text_2": "up for another round of 'f––– around and find out'",
+    "victim_testimony": "My own government attempted to execute me"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "2026-02-05_jesus-molina-veya",
+  "subject": "Jesus Molina-Veya",
+  "type": "detention-death",
+  "created": "2026-02-05T14:31:17Z",
+  "updated": "2026-02-05T19:00:00Z",
+  "status": "completed",
+  "confidence": "high",
+  "tags": ["ice", "detention-death", "suicide", "mental-health", "stewart-detention-center", "corecivic", "georgia", "mexico", "solitary-confinement", "overcrowding", "screening-failure", "congressional-inquiry"],
+  "summary": "45-year-old man with prior suicide attempt died by suicide at overcrowded Stewart Detention Center. Third suicide at facility. Screening failed to flag high-risk despite documented mental health history. CoreCivic-operated facility has pattern of inadequate mental health care.",
+  "sources_count": 12,
+  "related_dossiers": ["2025-ice-deaths", "2026-02-05_abelardo-avellaneda-delgado"],
+  "victim_details": {
+    "name": "Jesus Molina-Veya",
+    "age": 45,
+    "nationality": "Mexico",
+    "immigration_status": "Undocumented, multiple illegal entries",
+    "medical_condition": "Mental health issues, prior suicide attempt, substance abuse history",
+    "date_of_death": "2025-06-07",
+    "location_of_death": "Stewart Detention Center, Lumpkin, Georgia",
+    "cause_of_death": "Suicide by hanging",
+    "days_in_custody": "Unknown"
+  },
+  "facility": "Stewart Detention Center (CoreCivic)",
+  "date_of_incident": "2025-06-07",
+  "location": "Lumpkin, Georgia, USA"
+}

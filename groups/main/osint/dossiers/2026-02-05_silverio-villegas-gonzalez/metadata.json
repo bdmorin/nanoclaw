@@ -1,0 +1,58 @@
+{
+  "subject": "Silverio Villegas González",
+  "type": "officer-involved-shooting",
+  "status": "complete",
+  "date_of_death": "2025-09-12",
+  "date_researched": "2026-02-05",
+  "researcher": "claude-code",
+  "confidence": "HIGH",
+  "victim": {
+    "name": "Silverio Villegas González",
+    "age": 38,
+    "nationality": "Mexico",
+    "citizenship": "undocumented",
+    "years_in_us": "20+",
+    "criminal_record": false,
+    "family": "father of 2 sons (ages 7, 3)"
+  },
+  "incident": {
+    "date": "2025-09-12",
+    "location": "Franklin Park, Illinois",
+    "agency": "ICE ERO",
+    "operation": "Operation Midway Blitz",
+    "outcome": "fatal",
+    "weapon_found": false
+  },
+  "medical_examiner": {
+    "cause_of_death": "multiple gunshot wounds",
+    "manner_of_death": "homicide",
+    "bullet_trajectory": "downward, left neck to lower-right chest",
+    "toxicology": "cocaine detected (low levels)"
+  },
+  "evidence_contradictions": {
+    "dhs_claim": "agent seriously injured, dragged significant distance",
+    "bodycam_evidence": "agent said injuries 'nothing major'",
+    "agents_wore_bodycam": false
+  },
+  "congressional_response": {
+    "oig_investigation_requested": true,
+    "subpoena_motion": true,
+    "members_involved": ["Ramirez", "García", "Durbin", "Blumenthal", "Duckworth", "Kelly"]
+  },
+  "tags": [
+    "ice-shooting",
+    "chicago",
+    "operation-midway-blitz",
+    "homicide-ruling",
+    "video-contradicts-dhs",
+    "no-criminal-record",
+    "congressional-investigation",
+    "weaponized-vehicle-claim"
+  ],
+  "sources_count": 11,
+  "related_cases": [
+    "marimar-martinez",
+    "renee-good",
+    "carlitos-parias"
+  ]
+}

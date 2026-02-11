@@ -1,0 +1,22 @@
+{
+  "id": "2026-02-05_leo-cruz-silva",
+  "subject": "Leo Cruz-Silva",
+  "type": "detention-death",
+  "created": "2026-02-05T14:26:10Z",
+  "updated": "2026-02-05T14:45:00Z",
+  "status": "completed",
+  "confidence": "high",
+  "tags": ["detention-death", "missouri", "ice", "apparent-suicide", "ste-genevieve", "preventable-death", "mental-health", "protocol-violations", "2025"],
+  "summary": "34-year-old Mexican national died by apparent suicide at Ste. Genevieve County Detention Center, Missouri, October 4, 2025. Found with sheet around neck less than 24 hours after arrival. Second suicide at same facility in 2025; ICE had failed to follow protocols before earlier death.",
+  "sources_count": 11,
+  "related_dossiers": ["brayan-garzon-rayo"],
+  "date_of_incident": "2025-10-04",
+  "date_of_death": "2025-10-04",
+  "age": 34,
+  "nationality": "Mexico",
+  "location": "Ste. Genevieve County, Missouri, USA",
+  "facility": "Ste. Genevieve County Detention Center",
+  "cause_of_death": "Apparent suicide (hanging)",
+  "time_in_detention": "less than 24 hours",
+  "arrest_reason": "public intoxication"
+}

@@ -1,0 +1,70 @@
+{
+  "id": "2026-02-05_chaofeng-ge",
+  "subject": "Chaofeng Ge",
+  "type": "detention-death",
+  "created": "2026-02-05T14:21:18Z",
+  "updated": "2026-02-05T14:52:00Z",
+  "status": "completed",
+  "confidence": "high",
+  "tags": [
+    "ice-custody",
+    "detention-death",
+    "suicide-disputed",
+    "mental-health-failure",
+    "language-barriers",
+    "pennsylvania",
+    "moshannon-valley",
+    "geo-group",
+    "protocol-violations",
+    "hog-tied",
+    "preventable-death",
+    "august-2025",
+    "lawsuit-filed",
+    "chinese-national"
+  ],
+  "summary": "Chaofeng Ge, 32, Chinese national, died August 5, 2025, after only 5 days in ICE custody at Moshannon Valley Processing Center, Pennsylvania. ICE ruled suicide by hanging, but autopsy revealed body found 'hog-tied' with hands and feet bound behind back. Family disputes suicide determination, filed federal lawsuit alleging ICE denied critical mental health care despite known suicidal ideation for months. No Mandarin-speaking staff at facility, leading to complete isolation. Brother reports Ge expressed feeling suicidal at arrest (January 2025), but ICE intake screening documented no mental health concerns. Multiple protocol violations apparent: failure to conduct mental health evaluation, inadequate language access, failure to act on suicidal ideation. Pattern matches Brayan Garzón-Rayo case - preventable death due to systemic failure to address mental health crisis. Facility operated by GEO Group ($3M+/month contract) has 88 DHS complaints including prior suicide attempt. Death occurred during Trump administration detention expansion with 25%+ population increase causing overcrowding. Lawsuit ongoing in Southern District of New York. CRITICAL: Physical mechanism of self-inflicted hog-tied hanging unclear and highly unusual.",
+  "sources_count": 23,
+  "related_dossiers": [],
+  "victim_details": {
+    "full_name": "Chaofeng Ge",
+    "age": 32,
+    "nationality": "Chinese (PRC)",
+    "residence": "Queens, New York City",
+    "date_of_death": "2025-08-05",
+    "location_of_death": "Moshannon Valley Processing Center, Philipsburg, Pennsylvania",
+    "time_in_custody": "5 days",
+    "official_cause": "Suicide by hanging (DISPUTED)",
+    "family": "Brother: Yanfeng Ge (lawsuit plaintiff)"
+  },
+  "facility_details": {
+    "name": "Moshannon Valley Processing Center",
+    "location": "Philipsburg, Clearfield County, Pennsylvania",
+    "operator": "GEO Group, Inc.",
+    "capacity": 1876,
+    "contract_value": "$3+ million/month",
+    "complaint_count": 88
+  },
+  "legal_status": {
+    "lawsuit_filed": true,
+    "court": "U.S. District Court, Southern District of New York",
+    "filed_date": "2025-11-12",
+    "plaintiff": "Yanfeng Ge (brother)",
+    "defendants": ["U.S. Department of Homeland Security", "ICE"],
+    "attorney": "David B. Rankin",
+    "status": "ongoing"
+  },
+  "protocol_violations": [
+    "Failure to conduct mental health evaluation despite known suicidal ideation",
+    "Inadequate language access - no Mandarin speakers",
+    "Failure to act on suicidal ideation expressed at arrest",
+    "Discrepancies in intake documentation vs. family account"
+  ],
+  "red_flags": [
+    "Body found hog-tied (hands and feet bound behind back) - extremely unusual for suicide",
+    "Death after only 5 days in custody",
+    "Complete language isolation - no Mandarin support",
+    "ICE omitted hog-tied position from initial press release",
+    "Facility has 88 DHS complaints including prior suicide attempt",
+    "ICE intake documented no mental health concerns despite family's account of months of suicidal ideation"
+  ]
+}

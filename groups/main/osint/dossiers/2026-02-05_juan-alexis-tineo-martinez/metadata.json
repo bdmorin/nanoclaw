@@ -1,0 +1,26 @@
+{
+  "id": "2026-02-05_juan-alexis-tineo-martinez",
+  "subject": "Juan Alexis Tineo-Martinez",
+  "type": "detention-death",
+  "created": "2026-02-05T12:01:23Z",
+  "updated": "2026-02-05T12:15:00Z",
+  "status": "complete",
+  "confidence": "medium-high",
+  "tags": ["2025", "dominican-republic", "puerto-rico", "maritime-interdiction", "contradictory-narratives", "ice-transparency-violation", "fourth-death-2025"],
+  "summary": "44-year-old Dominican man died Feb 23, 2025 at Centro Medico Hospital, San Juan, PR. **CONTRADICTORY OFFICIAL RECORDS**: ICE claims 2-day detention (Feb 21-23) ending with leg pain complaint and immediate hospital transfer. Puerto Rico Forensic Science Institute NamUS report states he was found in 'boat accident' and died same day - NO mention of ICE custody or 2-day detention. ICE violated transparency policy with 8-day announcement delay. Zero local PR media coverage. Autopsy pending.",
+  "sources_count": 8,
+  "related_dossiers": ["2026-02-05_genry-ruiz-guillen", "2026-02-05_maksym-chernyak"],
+  "key_findings": {
+    "date_of_death": "2025-02-23",
+    "age": 44,
+    "nationality": "Dominican Republic",
+    "facility": "ICE custody (claimed) / Maritime incident location",
+    "time_in_custody_disputed": "ICE claims 2 days (Feb 21-23), Forensic Institute implies same-day (Feb 23)",
+    "official_cause": "Pending autopsy by Puerto Rico Forensic Science Institute",
+    "critical_contradiction": "ICE version vs. Forensic Institute NamUS report - fundamentally different timelines and circumstances",
+    "ice_version": "2-day detention, leg pain, immediate 911 call, hospital transfer",
+    "forensic_version": "Boat accident, transported to hospital, died same day - no ICE custody mentioned",
+    "pattern": "Narrative control, delayed announcement (8 days vs required 2), contradictory official records",
+    "transparency_violation": "ICE announced death March 3 (8 days late), violated 2-business-day policy"
+  }
+}

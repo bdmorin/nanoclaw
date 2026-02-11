@@ -1,0 +1,21 @@
+{
+  "id": "2026-02-05_huabing-xie",
+  "subject": "Huabing Xie",
+  "type": "detention-death",
+  "created": "2026-02-05T14:26:10Z",
+  "updated": "2026-02-05T14:45:00Z",
+  "status": "completed",
+  "confidence": "high",
+  "tags": ["detention-death", "california", "calexico", "ice", "medical-emergency", "seizure", "imperial-regional-detention-facility", "ice-non-compliance", "2025"],
+  "summary": "Chinese national died after seizure at Imperial Regional Detention Facility, Calexico, CA, September 29, 2025. ICE violated federal law by failing to release mandated death report. Facility had documented medical staffing shortages.",
+  "sources_count": 12,
+  "related_dossiers": ["luis-beltran-yanez-cruz"],
+  "date_of_incident": "2025-09-29",
+  "date_of_death": "2025-09-29",
+  "age": "unknown",
+  "nationality": "China",
+  "location": "Calexico, California, USA",
+  "facility": "Imperial Regional Detention Facility",
+  "cause_of_death": "Seizure (medical emergency)",
+  "ice_reporting_violation": true
+}
