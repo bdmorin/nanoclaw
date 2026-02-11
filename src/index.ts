@@ -10,16 +10,13 @@ import {
   POLL_INTERVAL,
   TRIGGER_PATTERN,
   WHATSAPP_ENABLED,
-  DISCORD_ENABLED,
   MATRIX_ENABLED,
   MATRIX_HOMESERVER,
   MATRIX_ACCESS_TOKEN,
   MATRIX_USER_ID,
   MATRIX_DEVICE_ID,
-  EMAIL_ENABLED,
 } from './config.js';
 import { WhatsAppChannel } from './channels/whatsapp.js';
-import { startDashboard, dashboardEvents, DashboardEvent } from './dashboard.js';
 import {
   ContainerOutput,
   runContainerAgent,
@@ -60,13 +57,6 @@ let messageLoopRunning = false;
 let whatsapp: WhatsAppChannel | null = null;
 let matrixConnected = false;
 const queue = new GroupQueue();
-
-// Dashboard for real-time monitoring
-function emitDashboard(type: DashboardEvent['type'], data: Record<string, unknown>) {
-  try {
-    dashboardEvents.emit('event', { type, timestamp: new Date().toISOString(), data });
-  } catch { /* non-fatal */ }
-}
 
 // Multi-channel send: route outbound messages to the right channel
 async function sendToChannel(jid: string, text: string): Promise<void> {
@@ -196,7 +186,6 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
   if (whatsapp && !chatJid.startsWith('matrix::')) {
     await whatsapp.setTyping(chatJid, true);
   }
-  emitDashboard('agent_start', { group: group.name, jid: chatJid });
   let hadError = false;
 
   const output = await runAgent(group, prompt, chatJid, async (result) => {
@@ -208,7 +197,6 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
       logger.info({ group: group.name }, `Agent output: ${raw.slice(0, 200)}`);
       if (text) {
         await sendToChannel(chatJid, `${ASSISTANT_NAME}: ${text}`);
-        emitDashboard('message_out', { group: group.name, text: text.slice(0, 200) });
       }
       // Only reset idle timer on actual results, not session-update markers (result: null)
       resetIdleTimer();
@@ -222,7 +210,6 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
   if (whatsapp && !chatJid.startsWith('matrix::')) {
     await whatsapp.setTyping(chatJid, false);
   }
-  emitDashboard('agent_done', { group: group.name, jid: chatJid });
   if (idleTimer) clearTimeout(idleTimer);
 
   if (output === 'error' || hadError) {
@@ -494,7 +481,6 @@ async function main(): Promise<void> {
       registeredChannels: () => new Set(Object.keys(registeredGroups)),
       onMessage: (msg: NewMessage) => {
         storeMessage(msg);
-        emitDashboard('message_in', { group: msg.chat_jid, sender: msg.sender, text: msg.content.slice(0, 200) });
       },
       onMetadata: (jid: string, timestamp: string) => storeChatMetadata(jid, timestamp),
       storePath: path.resolve(DATA_DIR, '..', 'store', 'matrix-crypto'),
@@ -528,7 +514,6 @@ async function main(): Promise<void> {
   });
   queue.setProcessMessagesFn(processGroupMessages);
   recoverPendingMessages();
-  startDashboard();
   startMessageLoop();
 }
 
