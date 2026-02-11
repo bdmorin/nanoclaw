@@ -28,8 +28,9 @@ google*.html
 .idea/
 .vscode/
 
-# Cloned deployment repos
+# Cloned/embedded repos (deployed separately)
 groups/main/publishing/repos/
+groups/main/site/
 
 # Misc
 agents-sdk-docs
