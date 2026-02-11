@@ -1,6 +1,12 @@
 import path from 'path';
 
 export const ASSISTANT_NAME = process.env.ASSISTANT_NAME || 'Andy';
+export const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+export const TELEGRAM_ONLY = process.env.TELEGRAM_ONLY === 'true';
+export const TELEGRAM_BOT_POOL = (process.env.TELEGRAM_BOT_POOL || '')
+  .split(',')
+  .map((t) => t.trim())
+  .filter(Boolean);
 export const POLL_INTERVAL = 2000;
 export const SCHEDULER_POLL_INTERVAL = 60000;
 
@@ -23,7 +29,7 @@ export const MAIN_GROUP_FOLDER = 'main';
 export const CONTAINER_IMAGE =
   process.env.CONTAINER_IMAGE || 'nanoclaw-agent:latest';
 export const CONTAINER_TIMEOUT = parseInt(
-  process.env.CONTAINER_TIMEOUT || '900000',
+  process.env.CONTAINER_TIMEOUT || '1800000',
   10,
 ); // 15 minutes - research tasks need room to breathe
 export const CONTAINER_MAX_OUTPUT_SIZE = parseInt(
@@ -31,6 +37,10 @@ export const CONTAINER_MAX_OUTPUT_SIZE = parseInt(
   10,
 ); // 10MB default
 export const IPC_POLL_INTERVAL = 1000;
+export const IDLE_TIMEOUT = parseInt(
+  process.env.IDLE_TIMEOUT || '1800000',
+  10,
+); // 30min default — how long to keep container alive after last result
 export const MAX_CONCURRENT_CONTAINERS = Math.max(
   1,
   parseInt(process.env.MAX_CONCURRENT_CONTAINERS || '5', 10) || 5,

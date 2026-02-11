@@ -1,139 +1,85 @@
-import 'dotenv/config';
-
-import { exec, execSync, spawnSync } from 'child_process';
+import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-
-import makeWASocket, {
-  DisconnectReason,
-  WASocket,
-  makeCacheableSignalKeyStore,
-  useMultiFileAuthState,
-} from '@whiskeysockets/baileys';
-import { CronExpressionParser } from 'cron-parser';
 
 import {
   ASSISTANT_NAME,
   DATA_DIR,
-  DISCORD_BOT_TOKEN,
-  DISCORD_ENABLED,
-  EMAIL_ENABLED,
-  GROUPS_DIR,
-  IPC_POLL_INTERVAL,
+  IDLE_TIMEOUT,
   MAIN_GROUP_FOLDER,
-  MATRIX_ACCESS_TOKEN,
-  MATRIX_DEVICE_ID,
-  MATRIX_ENABLED,
-  MATRIX_HOMESERVER,
-  MATRIX_STORE_PATH,
-  MATRIX_USER_ID,
   POLL_INTERVAL,
-  STORE_DIR,
-  TIMEZONE,
   TRIGGER_PATTERN,
   WHATSAPP_ENABLED,
+  DISCORD_ENABLED,
+  MATRIX_ENABLED,
+  MATRIX_HOMESERVER,
+  MATRIX_ACCESS_TOKEN,
+  MATRIX_USER_ID,
+  MATRIX_DEVICE_ID,
+  EMAIL_ENABLED,
 } from './config.js';
+import { WhatsAppChannel } from './channels/whatsapp.js';
+import { startDashboard, dashboardEvents, DashboardEvent } from './dashboard.js';
 import {
-  connectDiscord,
-  isDiscordJid,
-  sendDiscordMessage,
-  setDiscordTyping,
-} from './discord-client.js';
-import {
-  connectMatrix,
-  isMatrixJid,
-  sendMatrixMessage,
-  setMatrixTyping,
-} from './matrix-client.js';
-import {
-  AgentResponse,
-  AvailableGroup,
+  ContainerOutput,
   runContainerAgent,
   writeGroupsSnapshot,
   writeTasksSnapshot,
 } from './container-runner.js';
 import {
-  createTask,
-  deleteTask,
   getAllChats,
   getAllRegisteredGroups,
   getAllSessions,
   getAllTasks,
-  getLastGroupSync,
   getMessagesSince,
   getNewMessages,
   getRouterState,
-  getTaskById,
   initDatabase,
-  setLastGroupSync,
   setRegisteredGroup,
   setRouterState,
   setSession,
   storeChatMetadata,
-  storeDiscordMessage,
   storeMessage,
-  updateChatName,
-  updateTask,
 } from './db.js';
-import { EmailWatcher } from './email-watcher.js';
 import { GroupQueue } from './group-queue.js';
-import { SchedulerDependencies, runTask, startSchedulerLoop } from './task-scheduler.js';
+import { startIpcWatcher } from './ipc.js';
+import { formatMessages, formatOutbound } from './router.js';
+import { startSchedulerLoop } from './task-scheduler.js';
 import { NewMessage, RegisteredGroup } from './types.js';
 import { logger } from './logger.js';
-import { dashboardEvents, startDashboard } from './dashboard.js';
 
-const GROUP_SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+// Re-export for backwards compatibility during refactor
+export { escapeXml, formatMessages } from './router.js';
 
-let sock: WASocket;
 let lastTimestamp = '';
 let sessions: Record<string, string> = {};
 let registeredGroups: Record<string, RegisteredGroup> = {};
 let lastAgentTimestamp: Record<string, string> = {};
-// LID to phone number mapping (WhatsApp now sends LID JIDs for self-chats)
-let lidToPhoneMap: Record<string, string> = {};
-// Guards to prevent duplicate loops on WhatsApp reconnect
 let messageLoopRunning = false;
-let ipcWatcherRunning = false;
-let groupSyncTimerStarted = false;
 
+let whatsapp: WhatsAppChannel | null = null;
+let matrixConnected = false;
 const queue = new GroupQueue();
-let emailWatcher: EmailWatcher | null = null;
-let schedulerDeps: SchedulerDependencies | null = null;
 
-/**
- * Translate a JID from LID format to phone format if we have a mapping.
- * Returns the original JID if no mapping exists.
- */
-function translateJid(jid: string): string {
-  if (!jid.endsWith('@lid')) return jid;
-  const lidUser = jid.split('@')[0].split(':')[0];
-  const phoneJid = lidToPhoneMap[lidUser];
-  if (phoneJid) {
-    logger.debug({ lidJid: jid, phoneJid }, 'Translated LID to phone JID');
-    return phoneJid;
-  }
-  return jid;
+// Dashboard for real-time monitoring
+function emitDashboard(type: DashboardEvent['type'], data: Record<string, unknown>) {
+  try {
+    dashboardEvents.emit('event', { type, timestamp: new Date().toISOString(), data });
+  } catch { /* non-fatal */ }
 }
 
-async function setTyping(jid: string, isTyping: boolean): Promise<void> {
-  try {
-    if (jid.startsWith('agent:') && jid.endsWith('@internal')) {
-      return;
-    }
-    if (isMatrixJid(jid)) {
-      await setMatrixTyping(jid, isTyping);
-    } else if (isDiscordJid(jid)) {
-      await setDiscordTyping(jid, isTyping);
-    } else if (sock) {
-      await sock.sendPresenceUpdate(isTyping ? 'composing' : 'paused', jid);
-    }
-  } catch (err) {
-    logger.debug({ jid, err }, 'Failed to update typing status');
+// Multi-channel send: route outbound messages to the right channel
+async function sendToChannel(jid: string, text: string): Promise<void> {
+  if (jid.startsWith('matrix::') && matrixConnected) {
+    const { sendMatrixMessage } = await import('./matrix-client.js');
+    const roomId = jid.replace('matrix::', '');
+    await sendMatrixMessage(roomId, text);
+  } else if (whatsapp) {
+    await whatsapp.sendMessage(jid, text);
   }
 }
 
 function loadState(): void {
-  // Load from SQLite (migration from JSON happens in initDatabase)
   lastTimestamp = getRouterState('last_timestamp') || '';
   const agentTs = getRouterState('last_agent_timestamp');
   try {
@@ -173,59 +119,26 @@ function registerGroup(jid: string, group: RegisteredGroup): void {
 }
 
 /**
- * Sync group metadata from WhatsApp.
- * Fetches all participating groups and stores their names in the database.
- * Called on startup, daily, and on-demand via IPC.
- */
-async function syncGroupMetadata(force = false): Promise<void> {
-  // Check if we need to sync (skip if synced recently, unless forced)
-  if (!force) {
-    const lastSync = getLastGroupSync();
-    if (lastSync) {
-      const lastSyncTime = new Date(lastSync).getTime();
-      const now = Date.now();
-      if (now - lastSyncTime < GROUP_SYNC_INTERVAL_MS) {
-        logger.debug({ lastSync }, 'Skipping group sync - synced recently');
-        return;
-      }
-    }
-  }
-
-  try {
-    logger.info('Syncing group metadata from WhatsApp...');
-    const groups = await sock.groupFetchAllParticipating();
-
-    let count = 0;
-    for (const [jid, metadata] of Object.entries(groups)) {
-      if (metadata.subject) {
-        updateChatName(jid, metadata.subject);
-        count++;
-      }
-    }
-
-    setLastGroupSync();
-    logger.info({ count }, 'Group metadata synced');
-  } catch (err) {
-    logger.error({ err }, 'Failed to sync group metadata');
-  }
-}
-
-/**
  * Get available groups list for the agent.
  * Returns groups ordered by most recent activity.
  */
-function getAvailableGroups(): AvailableGroup[] {
+export function getAvailableGroups(): import('./container-runner.js').AvailableGroup[] {
   const chats = getAllChats();
   const registeredJids = new Set(Object.keys(registeredGroups));
 
   return chats
-    .filter((c) => c.jid !== '__group_sync__' && (c.jid.endsWith('@g.us') || c.jid.startsWith('matrix::') || c.jid.startsWith('discord::')))
+    .filter((c) => c.jid !== '__group_sync__' && c.jid.endsWith('@g.us'))
     .map((c) => ({
       jid: c.jid,
       name: c.name,
       lastActivity: c.last_message_time,
       isRegistered: registeredJids.has(c.jid),
     }));
+}
+
+/** @internal - exported for testing */
+export function _setRegisteredGroups(groups: Record<string, RegisteredGroup>): void {
+  registeredGroups = groups;
 }
 
 /**
@@ -238,7 +151,6 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
 
   const isMainGroup = group.folder === MAIN_GROUP_FOLDER;
 
-  // Get all messages since last agent interaction
   const sinceTimestamp = lastAgentTimestamp[chatJid] || '';
   const missedMessages = getMessagesSince(
     chatJid,
@@ -256,56 +168,69 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
     if (!hasTrigger) return true;
   }
 
-  const lines = missedMessages.map((m) => {
-    const escapeXml = (s: string) =>
-      s
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    return `<message sender="${escapeXml(m.sender_name)}" time="${m.timestamp}">${escapeXml(m.content)}</message>`;
-  });
-  const prompt = `<messages>\n${lines.join('\n')}\n</messages>`;
+  const prompt = formatMessages(missedMessages);
+
+  // Advance cursor so the piping path in startMessageLoop won't re-fetch
+  // these messages. Save the old cursor so we can roll back on error.
+  const previousCursor = lastAgentTimestamp[chatJid] || '';
+  lastAgentTimestamp[chatJid] =
+    missedMessages[missedMessages.length - 1].timestamp;
+  saveState();
 
   logger.info(
     { group: group.name, messageCount: missedMessages.length },
     'Processing messages',
   );
 
-  // Emit dashboard event for incoming messages
-  const lastMsg = missedMessages[missedMessages.length - 1];
-  dashboardEvents.emit('message_in', {
-    sender: lastMsg.sender_name,
-    group: group.name,
-    content: lastMsg.content.slice(0, 200),
+  // Track idle timer for closing stdin when agent is idle
+  let idleTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const resetIdleTimer = () => {
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      logger.debug({ group: group.name }, 'Idle timeout, closing container stdin');
+      queue.closeStdin(chatJid);
+    }, IDLE_TIMEOUT);
+  };
+
+  if (whatsapp && !chatJid.startsWith('matrix::')) {
+    await whatsapp.setTyping(chatJid, true);
+  }
+  emitDashboard('agent_start', { group: group.name, jid: chatJid });
+  let hadError = false;
+
+  const output = await runAgent(group, prompt, chatJid, async (result) => {
+    // Streaming output callback — called for each agent result
+    if (result.result) {
+      const raw = typeof result.result === 'string' ? result.result : JSON.stringify(result.result);
+      // Strip <internal>...</internal> blocks — agent uses these for internal reasoning
+      const text = raw.replace(/<internal>[\s\S]*?<\/internal>/g, '').trim();
+      logger.info({ group: group.name }, `Agent output: ${raw.slice(0, 200)}`);
+      if (text) {
+        await sendToChannel(chatJid, `${ASSISTANT_NAME}: ${text}`);
+        emitDashboard('message_out', { group: group.name, text: text.slice(0, 200) });
+      }
+      // Only reset idle timer on actual results, not session-update markers (result: null)
+      resetIdleTimer();
+    }
+
+    if (result.status === 'error') {
+      hadError = true;
+    }
   });
 
-  await setTyping(chatJid, true);
-  const startTime = Date.now();
-  dashboardEvents.emit('agent_start', { group: group.name });
-  const response = await runAgent(group, prompt, chatJid);
-  dashboardEvents.emit('agent_done', { group: group.name, duration: Date.now() - startTime });
-  await setTyping(chatJid, false);
+  if (whatsapp && !chatJid.startsWith('matrix::')) {
+    await whatsapp.setTyping(chatJid, false);
+  }
+  emitDashboard('agent_done', { group: group.name, jid: chatJid });
+  if (idleTimer) clearTimeout(idleTimer);
 
-  if (response === 'error') {
-    // Container or agent error — signal failure so queue can retry with backoff
+  if (output === 'error' || hadError) {
+    // Roll back cursor so retries can re-process these messages
+    lastAgentTimestamp[chatJid] = previousCursor;
+    saveState();
+    logger.warn({ group: group.name }, 'Agent error, rolled back message cursor for retry');
     return false;
-  }
-
-  // Agent processed messages successfully (whether it responded or stayed silent)
-  lastAgentTimestamp[chatJid] =
-    missedMessages[missedMessages.length - 1].timestamp;
-  saveState();
-
-  if (response.outputType === 'message' && response.userMessage) {
-    await sendMessage(chatJid, `${ASSISTANT_NAME}: ${response.userMessage}`);
-  }
-
-  if (response.internalLog) {
-    logger.info(
-      { group: group.name, outputType: response.outputType },
-      `Agent: ${response.internalLog}`,
-    );
   }
 
   return true;
@@ -315,7 +240,8 @@ async function runAgent(
   group: RegisteredGroup,
   prompt: string,
   chatJid: string,
-): Promise<AgentResponse | 'error'> {
+  onOutput?: (output: ContainerOutput) => Promise<void>,
+): Promise<'success' | 'error'> {
   const isMain = group.folder === MAIN_GROUP_FOLDER;
   const sessionId = sessions[group.folder];
 
@@ -344,6 +270,17 @@ async function runAgent(
     new Set(Object.keys(registeredGroups)),
   );
 
+  // Wrap onOutput to track session ID from streamed results
+  const wrappedOnOutput = onOutput
+    ? async (output: ContainerOutput) => {
+        if (output.newSessionId) {
+          sessions[group.folder] = output.newSessionId;
+          setSession(group.folder, output.newSessionId);
+        }
+        await onOutput(output);
+      }
+    : undefined;
+
   try {
     const output = await runContainerAgent(
       group,
@@ -354,7 +291,8 @@ async function runAgent(
         chatJid,
         isMain,
       },
-      (proc, containerName) => queue.registerProcess(chatJid, proc, containerName),
+      (proc, containerName) => queue.registerProcess(chatJid, proc, containerName, group.folder),
+      wrappedOnOutput,
     );
 
     if (output.newSessionId) {
@@ -370,572 +308,11 @@ async function runAgent(
       return 'error';
     }
 
-    return output.result ?? { outputType: 'log' };
+    return 'success';
   } catch (err) {
     logger.error({ group: group.name, err }, 'Agent error');
     return 'error';
   }
-}
-
-async function sendMessage(jid: string, text: string): Promise<void> {
-  try {
-    if (jid.startsWith('agent:') && jid.endsWith('@internal')) {
-      logger.info({ jid, length: text.length }, 'Internal agent message (logged)');
-      return;
-    }
-    const group = registeredGroups[jid];
-    if (isMatrixJid(jid)) {
-      await sendMatrixMessage(jid, text);
-    } else if (isDiscordJid(jid)) {
-      await sendDiscordMessage(jid, text);
-    } else if (sock) {
-      await sock.sendMessage(jid, { text });
-      logger.info({ jid, length: text.length }, 'Message sent');
-    } else {
-      logger.error({ jid }, 'No channel available to send message');
-    }
-    // Emit dashboard event
-    dashboardEvents.emit('message_out', {
-      group: group?.name || jid,
-      content: text.slice(0, 200),
-    });
-  } catch (err) {
-    logger.error({ jid, err }, 'Failed to send message');
-    dashboardEvents.emit('error', { error: String(err) });
-  }
-}
-
-function startIpcWatcher(): void {
-  if (ipcWatcherRunning) {
-    logger.debug('IPC watcher already running, skipping duplicate start');
-    return;
-  }
-  ipcWatcherRunning = true;
-
-  const ipcBaseDir = path.join(DATA_DIR, 'ipc');
-  fs.mkdirSync(ipcBaseDir, { recursive: true });
-
-  const processIpcFiles = async () => {
-    // Scan all group IPC directories (identity determined by directory)
-    let groupFolders: string[];
-    try {
-      groupFolders = fs.readdirSync(ipcBaseDir).filter((f) => {
-        const stat = fs.statSync(path.join(ipcBaseDir, f));
-        return stat.isDirectory() && f !== 'errors';
-      });
-    } catch (err) {
-      logger.error({ err }, 'Error reading IPC base directory');
-      setTimeout(processIpcFiles, IPC_POLL_INTERVAL);
-      return;
-    }
-
-    for (const sourceGroup of groupFolders) {
-      const isMain = sourceGroup === MAIN_GROUP_FOLDER;
-      const messagesDir = path.join(ipcBaseDir, sourceGroup, 'messages');
-      const tasksDir = path.join(ipcBaseDir, sourceGroup, 'tasks');
-
-      // Process messages from this group's IPC directory
-      try {
-        if (fs.existsSync(messagesDir)) {
-          const messageFiles = fs
-            .readdirSync(messagesDir)
-            .filter((f) => f.endsWith('.json'));
-          for (const file of messageFiles) {
-            const filePath = path.join(messagesDir, file);
-            try {
-              const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-              if (data.type === 'message' && data.chatJid && data.text) {
-                // Authorization: verify this group can send to this chatJid
-                const targetGroup = registeredGroups[data.chatJid];
-                if (
-                  isMain ||
-                  (targetGroup && targetGroup.folder === sourceGroup)
-                ) {
-                  await sendMessage(
-                    data.chatJid,
-                    `${ASSISTANT_NAME}: ${data.text}`,
-                  );
-                  logger.info(
-                    { chatJid: data.chatJid, sourceGroup },
-                    'IPC message sent',
-                  );
-                } else {
-                  logger.warn(
-                    { chatJid: data.chatJid, sourceGroup },
-                    'Unauthorized IPC message attempt blocked',
-                  );
-                }
-              }
-              fs.unlinkSync(filePath);
-            } catch (err) {
-              logger.error(
-                { file, sourceGroup, err },
-                'Error processing IPC message',
-              );
-              const errorDir = path.join(ipcBaseDir, 'errors');
-              fs.mkdirSync(errorDir, { recursive: true });
-              fs.renameSync(
-                filePath,
-                path.join(errorDir, `${sourceGroup}-${file}`),
-              );
-            }
-          }
-        }
-      } catch (err) {
-        logger.error(
-          { err, sourceGroup },
-          'Error reading IPC messages directory',
-        );
-      }
-
-      // Process tasks from this group's IPC directory
-      try {
-        if (fs.existsSync(tasksDir)) {
-          const taskFiles = fs
-            .readdirSync(tasksDir)
-            .filter((f) => f.endsWith('.json'));
-          for (const file of taskFiles) {
-            const filePath = path.join(tasksDir, file);
-            try {
-              const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-              // Pass source group identity to processTaskIpc for authorization
-              await processTaskIpc(data, sourceGroup, isMain);
-              fs.unlinkSync(filePath);
-            } catch (err) {
-              logger.error(
-                { file, sourceGroup, err },
-                'Error processing IPC task',
-              );
-              const errorDir = path.join(ipcBaseDir, 'errors');
-              fs.mkdirSync(errorDir, { recursive: true });
-              fs.renameSync(
-                filePath,
-                path.join(errorDir, `${sourceGroup}-${file}`),
-              );
-            }
-          }
-        }
-      } catch (err) {
-        logger.error({ err, sourceGroup }, 'Error reading IPC tasks directory');
-      }
-    }
-
-    setTimeout(processIpcFiles, IPC_POLL_INTERVAL);
-  };
-
-  processIpcFiles();
-  logger.info('IPC watcher started (per-group namespaces)');
-}
-
-async function processTaskIpc(
-  data: {
-    type: string;
-    taskId?: string;
-    prompt?: string;
-    schedule_type?: string;
-    schedule_value?: string;
-    context_mode?: string;
-    groupFolder?: string;
-    chatJid?: string;
-    targetJid?: string;
-    // For register_group
-    jid?: string;
-    name?: string;
-    folder?: string;
-    trigger?: string;
-    containerConfig?: RegisteredGroup['containerConfig'];
-    // For dispatch
-    target_agent?: string;
-    priority?: string;
-  },
-  sourceGroup: string, // Verified identity from IPC directory
-  isMain: boolean, // Verified from directory path
-): Promise<void> {
-  switch (data.type) {
-    case 'schedule_task':
-      if (
-        data.prompt &&
-        data.schedule_type &&
-        data.schedule_value &&
-        data.targetJid
-      ) {
-        // Resolve the target group from JID
-        const targetJid = data.targetJid as string;
-        const targetGroupEntry = registeredGroups[targetJid];
-
-        if (!targetGroupEntry) {
-          logger.warn(
-            { targetJid },
-            'Cannot schedule task: target group not registered',
-          );
-          break;
-        }
-
-        const targetFolder = targetGroupEntry.folder;
-
-        // Authorization: non-main groups can only schedule for themselves
-        if (!isMain && targetFolder !== sourceGroup) {
-          logger.warn(
-            { sourceGroup, targetFolder },
-            'Unauthorized schedule_task attempt blocked',
-          );
-          break;
-        }
-
-        const scheduleType = data.schedule_type as 'cron' | 'interval' | 'once';
-
-        let nextRun: string | null = null;
-        if (scheduleType === 'cron') {
-          try {
-            const interval = CronExpressionParser.parse(data.schedule_value, {
-              tz: TIMEZONE,
-            });
-            nextRun = interval.next().toISOString();
-          } catch {
-            logger.warn(
-              { scheduleValue: data.schedule_value },
-              'Invalid cron expression',
-            );
-            break;
-          }
-        } else if (scheduleType === 'interval') {
-          const ms = parseInt(data.schedule_value, 10);
-          if (isNaN(ms) || ms <= 0) {
-            logger.warn(
-              { scheduleValue: data.schedule_value },
-              'Invalid interval',
-            );
-            break;
-          }
-          nextRun = new Date(Date.now() + ms).toISOString();
-        } else if (scheduleType === 'once') {
-          const scheduled = new Date(data.schedule_value);
-          if (isNaN(scheduled.getTime())) {
-            logger.warn(
-              { scheduleValue: data.schedule_value },
-              'Invalid timestamp',
-            );
-            break;
-          }
-          nextRun = scheduled.toISOString();
-        }
-
-        const taskId = `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        const contextMode =
-          data.context_mode === 'group' || data.context_mode === 'isolated'
-            ? data.context_mode
-            : 'isolated';
-        createTask({
-          id: taskId,
-          group_folder: targetFolder,
-          chat_jid: targetJid,
-          prompt: data.prompt,
-          schedule_type: scheduleType,
-          schedule_value: data.schedule_value,
-          context_mode: contextMode,
-          next_run: nextRun,
-          status: 'active',
-          created_at: new Date().toISOString(),
-        });
-        logger.info(
-          { taskId, sourceGroup, targetFolder, contextMode },
-          'Task created via IPC',
-        );
-      }
-      break;
-
-    case 'pause_task':
-      if (data.taskId) {
-        const task = getTaskById(data.taskId);
-        if (task && (isMain || task.group_folder === sourceGroup)) {
-          updateTask(data.taskId, { status: 'paused' });
-          logger.info(
-            { taskId: data.taskId, sourceGroup },
-            'Task paused via IPC',
-          );
-        } else {
-          logger.warn(
-            { taskId: data.taskId, sourceGroup },
-            'Unauthorized task pause attempt',
-          );
-        }
-      }
-      break;
-
-    case 'resume_task':
-      if (data.taskId) {
-        const task = getTaskById(data.taskId);
-        if (task && (isMain || task.group_folder === sourceGroup)) {
-          updateTask(data.taskId, { status: 'active' });
-          logger.info(
-            { taskId: data.taskId, sourceGroup },
-            'Task resumed via IPC',
-          );
-        } else {
-          logger.warn(
-            { taskId: data.taskId, sourceGroup },
-            'Unauthorized task resume attempt',
-          );
-        }
-      }
-      break;
-
-    case 'cancel_task':
-      if (data.taskId) {
-        const task = getTaskById(data.taskId);
-        if (task && (isMain || task.group_folder === sourceGroup)) {
-          deleteTask(data.taskId);
-          logger.info(
-            { taskId: data.taskId, sourceGroup },
-            'Task cancelled via IPC',
-          );
-        } else {
-          logger.warn(
-            { taskId: data.taskId, sourceGroup },
-            'Unauthorized task cancel attempt',
-          );
-        }
-      }
-      break;
-
-    case 'refresh_groups':
-      // Only main group can request a refresh
-      if (isMain) {
-        logger.info(
-          { sourceGroup },
-          'Group metadata refresh requested via IPC',
-        );
-        await syncGroupMetadata(true);
-        // Write updated snapshot immediately
-        const availableGroups = getAvailableGroups();
-        writeGroupsSnapshot(
-          sourceGroup,
-          true,
-          availableGroups,
-          new Set(Object.keys(registeredGroups)),
-        );
-      } else {
-        logger.warn(
-          { sourceGroup },
-          'Unauthorized refresh_groups attempt blocked',
-        );
-      }
-      break;
-
-    case 'register_group':
-      // Only main group can register new groups
-      if (!isMain) {
-        logger.warn(
-          { sourceGroup },
-          'Unauthorized register_group attempt blocked',
-        );
-        break;
-      }
-      if (data.jid && data.name && data.folder && data.trigger) {
-        registerGroup(data.jid, {
-          name: data.name,
-          folder: data.folder,
-          trigger: data.trigger,
-          added_at: new Date().toISOString(),
-          containerConfig: data.containerConfig,
-        });
-      } else {
-        logger.warn(
-          { data },
-          'Invalid register_group request - missing required fields',
-        );
-      }
-      break;
-
-    case 'dispatch':
-      // Only main group can dispatch to specialist agents
-      if (!isMain) {
-        logger.warn(
-          { sourceGroup },
-          'Unauthorized dispatch attempt blocked',
-        );
-        break;
-      }
-      if (!data.target_agent || !data.prompt) {
-        logger.warn(
-          { data },
-          'Invalid dispatch request - missing target_agent or prompt',
-        );
-        break;
-      }
-      {
-        const agentJid = `agent:${data.target_agent}@internal`;
-        const agentGroup = registeredGroups[agentJid];
-        if (!agentGroup) {
-          logger.warn(
-            { target_agent: data.target_agent, agentJid },
-            'Dispatch failed: specialist agent not registered',
-          );
-          break;
-        }
-
-        // Find the main group's real chat JID for result routing
-        const mainChatJid = Object.entries(registeredGroups).find(
-          ([, g]) => g.folder === MAIN_GROUP_FOLDER,
-        )?.[0];
-
-        if (!mainChatJid || mainChatJid.endsWith('@internal')) {
-          logger.error(
-            'Cannot dispatch: no real chat JID found for main group',
-          );
-          break;
-        }
-
-        const taskId = `dispatch-${data.target_agent}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        createTask({
-          id: taskId,
-          group_folder: agentGroup.folder,
-          chat_jid: mainChatJid,
-          prompt: data.prompt,
-          schedule_type: 'once',
-          schedule_value: new Date().toISOString(),
-          context_mode: 'isolated',
-          next_run: new Date().toISOString(),
-          status: 'active',
-          created_at: new Date().toISOString(),
-        });
-
-        logger.info(
-          { taskId, target_agent: data.target_agent, priority: data.priority || 'normal' },
-          'Dispatch task created',
-        );
-
-        // Urgent: bypass scheduler, enqueue immediately
-        if (data.priority === 'urgent' && schedulerDeps) {
-          const task = getTaskById(taskId);
-          if (task) {
-            schedulerDeps.queue.enqueueTask(
-              mainChatJid,
-              taskId,
-              () => runTask(task, schedulerDeps!),
-            );
-            logger.info({ taskId }, 'Urgent dispatch enqueued immediately');
-          }
-        }
-      }
-      break;
-
-    default:
-      logger.warn({ type: data.type }, 'Unknown IPC task type');
-  }
-}
-
-async function connectWhatsApp(): Promise<void> {
-  const authDir = path.join(STORE_DIR, 'auth');
-  fs.mkdirSync(authDir, { recursive: true });
-
-  const { state, saveCreds } = await useMultiFileAuthState(authDir);
-
-  sock = makeWASocket({
-    auth: {
-      creds: state.creds,
-      keys: makeCacheableSignalKeyStore(state.keys, logger),
-    },
-    printQRInTerminal: false,
-    logger,
-    browser: ['NanoClaw', 'Chrome', '1.0.0'],
-  });
-
-  sock.ev.on('connection.update', (update) => {
-    const { connection, lastDisconnect, qr } = update;
-
-    if (qr) {
-      const msg =
-        'WhatsApp authentication required. Run /setup in Claude Code.';
-      logger.error(msg);
-      exec(
-        `osascript -e 'display notification "${msg}" with title "NanoClaw" sound name "Basso"'`,
-      );
-      setTimeout(() => process.exit(1), 1000);
-    }
-
-    if (connection === 'close') {
-      const reason = (lastDisconnect?.error as any)?.output?.statusCode;
-      const shouldReconnect = reason !== DisconnectReason.loggedOut;
-      logger.info({ reason, shouldReconnect }, 'Connection closed');
-
-      if (shouldReconnect) {
-        logger.info('Reconnecting...');
-        connectWhatsApp();
-      } else {
-        logger.info('Logged out. Run /setup to re-authenticate.');
-        process.exit(0);
-      }
-    } else if (connection === 'open') {
-      logger.info('Connected to WhatsApp');
-
-      // Build LID to phone mapping from auth state for self-chat translation
-      if (sock.user) {
-        const phoneUser = sock.user.id.split(':')[0];
-        const lidUser = sock.user.lid?.split(':')[0];
-        if (lidUser && phoneUser) {
-          lidToPhoneMap[lidUser] = `${phoneUser}@s.whatsapp.net`;
-          logger.debug({ lidUser, phoneUser }, 'LID to phone mapping set');
-        }
-      }
-
-      // Sync group metadata on startup (respects 24h cache)
-      syncGroupMetadata().catch((err) =>
-        logger.error({ err }, 'Initial group sync failed'),
-      );
-      // Set up daily sync timer (only once)
-      if (!groupSyncTimerStarted) {
-        groupSyncTimerStarted = true;
-        setInterval(() => {
-          syncGroupMetadata().catch((err) =>
-            logger.error({ err }, 'Periodic group sync failed'),
-          );
-        }, GROUP_SYNC_INTERVAL_MS);
-      }
-      schedulerDeps = {
-        sendMessage,
-        registeredGroups: () => registeredGroups,
-        getSessions: () => sessions,
-        queue,
-        onProcess: (groupJid, proc, containerName) => queue.registerProcess(groupJid, proc, containerName),
-      };
-      startSchedulerLoop(schedulerDeps);
-      startIpcWatcher();
-      queue.setProcessMessagesFn(processGroupMessages);
-      recoverPendingMessages();
-      startMessageLoop();
-    }
-  });
-
-  sock.ev.on('creds.update', saveCreds);
-
-  sock.ev.on('messages.upsert', ({ messages }) => {
-    for (const msg of messages) {
-      if (!msg.message) continue;
-      const rawJid = msg.key.remoteJid;
-      if (!rawJid || rawJid === 'status@broadcast') continue;
-
-      // Translate LID JID to phone JID if applicable
-      const chatJid = translateJid(rawJid);
-
-      const timestamp = new Date(
-        Number(msg.messageTimestamp) * 1000,
-      ).toISOString();
-
-      // Always store chat metadata for group discovery
-      storeChatMetadata(chatJid, timestamp);
-
-      // Only store full message content for registered groups
-      if (registeredGroups[chatJid]) {
-        storeMessage(
-          msg,
-          chatJid,
-          msg.key.fromMe || false,
-          msg.pushName || undefined,
-        );
-      }
-    }
-  });
 }
 
 async function startMessageLoop(): Promise<void> {
@@ -963,14 +340,57 @@ async function startMessageLoop(): Promise<void> {
         lastTimestamp = newTimestamp;
         saveState();
 
-        // Deduplicate by group and enqueue
-        const groupsWithMessages = new Set<string>();
+        // Deduplicate by group
+        const messagesByGroup = new Map<string, NewMessage[]>();
         for (const msg of messages) {
-          groupsWithMessages.add(msg.chat_jid);
+          const existing = messagesByGroup.get(msg.chat_jid);
+          if (existing) {
+            existing.push(msg);
+          } else {
+            messagesByGroup.set(msg.chat_jid, [msg]);
+          }
         }
 
-        for (const chatJid of groupsWithMessages) {
-          queue.enqueueMessageCheck(chatJid);
+        for (const [chatJid, groupMessages] of messagesByGroup) {
+          const group = registeredGroups[chatJid];
+          if (!group) continue;
+
+          const isMainGroup = group.folder === MAIN_GROUP_FOLDER;
+          const needsTrigger = !isMainGroup && group.requiresTrigger !== false;
+
+          // For non-main groups, only act on trigger messages.
+          // Non-trigger messages accumulate in DB and get pulled as
+          // context when a trigger eventually arrives.
+          if (needsTrigger) {
+            const hasTrigger = groupMessages.some((m) =>
+              TRIGGER_PATTERN.test(m.content.trim()),
+            );
+            if (!hasTrigger) continue;
+          }
+
+          // Pull all messages since lastAgentTimestamp so non-trigger
+          // context that accumulated between triggers is included.
+          const allPending = getMessagesSince(
+            chatJid,
+            lastAgentTimestamp[chatJid] || '',
+            ASSISTANT_NAME,
+          );
+          const messagesToSend =
+            allPending.length > 0 ? allPending : groupMessages;
+          const formatted = formatMessages(messagesToSend);
+
+          if (queue.sendMessage(chatJid, formatted)) {
+            logger.debug(
+              { chatJid, count: messagesToSend.length },
+              'Piped messages to active container',
+            );
+            lastAgentTimestamp[chatJid] =
+              messagesToSend[messagesToSend.length - 1].timestamp;
+            saveState();
+          } else {
+            // No active container — enqueue for a new one
+            queue.enqueueMessageCheck(chatJid);
+          }
         }
       }
     } catch (err) {
@@ -998,330 +418,32 @@ function recoverPendingMessages(): void {
   }
 }
 
-function detectContainerRuntime(): 'docker' | 'container' {
-  const dockerCheck = spawnSync('docker', ['info'], { stdio: 'pipe' });
-  if (dockerCheck.status === 0) {
-    return 'docker';
-  }
-  const containerCheck = spawnSync('which', ['container'], { stdio: 'pipe' });
-  if (containerCheck.status === 0) {
-    return 'container';
-  }
-  return 'docker';
-}
-
 function ensureContainerSystemRunning(): void {
-  const runtime = detectContainerRuntime();
-
-  if (runtime === 'docker') {
-    // Docker: just verify it's running
-    try {
-      execSync('docker info', { stdio: 'pipe' });
-      logger.debug('Docker is running');
-    } catch {
-      logger.error('Docker is not running');
-      console.error(
-        '\n╔════════════════════════════════════════════════════════════════╗',
-      );
-      console.error(
-        '║  FATAL: Docker is not running                                  ║',
-      );
-      console.error(
-        '║                                                                ║',
-      );
-      console.error(
-        '║  Start Docker and try again:                                  ║',
-      );
-      console.error(
-        '║    sudo systemctl start docker                                ║',
-      );
-      console.error(
-        '╚════════════════════════════════════════════════════════════════╝\n',
-      );
-      throw new Error('Docker is required but not running');
-    }
-  } else {
-    // Apple Container
-    try {
-      execSync('container system status', { stdio: 'pipe' });
-      logger.debug('Apple Container system already running');
-    } catch {
-      logger.info('Starting Apple Container system...');
-      try {
-        execSync('container system start', { stdio: 'pipe', timeout: 30000 });
-        logger.info('Apple Container system started');
-      } catch (err) {
-        logger.error({ err }, 'Failed to start Apple Container system');
-        console.error(
-          '\n╔════════════════════════════════════════════════════════════════╗',
-        );
-        console.error(
-          '║  FATAL: Apple Container system failed to start                 ║',
-        );
-        console.error(
-          '║                                                                ║',
-        );
-        console.error(
-          '║  Agents cannot run without Apple Container. To fix:           ║',
-        );
-        console.error(
-          '║  1. Install from: https://github.com/apple/container/releases ║',
-        );
-        console.error(
-          '║  2. Run: container system start                               ║',
-        );
-        console.error(
-          '║  3. Restart NanoClaw                                          ║',
-        );
-        console.error(
-          '╚════════════════════════════════════════════════════════════════╝\n',
-        );
-        throw new Error(
-          'Apple Container system is required but failed to start',
-        );
-      }
-    }
-  }
-}
-
-// Discord message buffer for polling (similar to WhatsApp)
-let discordMessageBuffer: NewMessage[] = [];
-
-// Matrix message buffer for polling (same pattern)
-let matrixMessageBuffer: NewMessage[] = [];
-
-async function connectDiscordChannel(): Promise<void> {
-  if (!DISCORD_BOT_TOKEN) {
-    logger.error('DISCORD_BOT_TOKEN not set in .env');
-    throw new Error('DISCORD_BOT_TOKEN required when DISCORD_ENABLED=true');
+  // Verify Docker is available
+  try {
+    execSync('docker info', { stdio: 'pipe' });
+    logger.debug('Docker available');
+  } catch {
+    throw new Error('Docker is required but not available. Install Docker and ensure the daemon is running.');
   }
 
-  await connectDiscord({
-    token: DISCORD_BOT_TOKEN,
-    onMessage: (msg) => {
-      // Buffer messages for polling loop
-      discordMessageBuffer.push(msg);
-    },
-    onMetadata: (jid, timestamp) => {
-      storeChatMetadata(jid, timestamp);
-    },
-    registeredChannels: () => new Set(Object.keys(registeredGroups)),
-  });
-
-  logger.info('Discord channel connected');
-
-  // Start loops if not already running
-  if (!schedulerDeps) {
-    schedulerDeps = {
-      sendMessage,
-      registeredGroups: () => registeredGroups,
-      getSessions: () => sessions,
-      queue,
-      onProcess: (groupJid, proc, containerName) => queue.registerProcess(groupJid, proc, containerName),
-    };
-  }
-  startSchedulerLoop(schedulerDeps);
-  startIpcWatcher();
-  queue.setProcessMessagesFn(processGroupMessages);
-  recoverPendingMessages();
-  startDiscordMessageLoop();
-}
-
-async function startDiscordMessageLoop(): Promise<void> {
-  if (messageLoopRunning) {
-    logger.debug('Message loop already running, skipping duplicate start');
-    return;
-  }
-  messageLoopRunning = true;
-  logger.info(`NanoClaw running on Discord (trigger: @${ASSISTANT_NAME})`);
-
-  while (true) {
-    try {
-      // Process buffered Discord messages - store them in DB
-      const buffered = [...discordMessageBuffer];
-      discordMessageBuffer = [];
-
-      for (const msg of buffered) {
-        if (isDiscordJid(msg.chat_jid) && registeredGroups[msg.chat_jid]) {
-          const { storeDiscordMessage } = await import('./db.js');
-          storeDiscordMessage(msg);
-        }
-      }
-
-      // Poll DB for new messages (same pattern as WhatsApp loop)
-      const jids = Object.keys(registeredGroups);
-      const { messages, newTimestamp } = getNewMessages(
-        jids,
-        lastTimestamp,
-        ASSISTANT_NAME,
-      );
-
-      if (messages.length > 0) {
-        logger.info({ count: messages.length }, 'New messages');
-
-        // Advance the "seen" cursor for all messages immediately
-        lastTimestamp = newTimestamp;
-        saveState();
-
-        // Deduplicate by group and enqueue
-        const groupsWithMessages = new Set<string>();
-        for (const msg of messages) {
-          groupsWithMessages.add(msg.chat_jid);
-        }
-
-        for (const chatJid of groupsWithMessages) {
-          queue.enqueueMessageCheck(chatJid);
-        }
-      }
-    } catch (err) {
-      logger.error({ err }, 'Error in message loop');
-    }
-    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL));
-  }
-}
-
-async function connectMatrixChannel(): Promise<void> {
-  if (!MATRIX_HOMESERVER || !MATRIX_ACCESS_TOKEN || !MATRIX_USER_ID || !MATRIX_DEVICE_ID) {
-    logger.error('Matrix credentials not fully configured in .env');
-    throw new Error('MATRIX_HOMESERVER, MATRIX_ACCESS_TOKEN, MATRIX_USER_ID, and MATRIX_DEVICE_ID required when MATRIX_ENABLED=true');
-  }
-
-  await connectMatrix({
-    homeserver: MATRIX_HOMESERVER,
-    userId: MATRIX_USER_ID,
-    accessToken: MATRIX_ACCESS_TOKEN,
-    deviceId: MATRIX_DEVICE_ID,
-    storePath: MATRIX_STORE_PATH,
-    onMessage: (msg) => {
-      matrixMessageBuffer.push(msg);
-    },
-    onMetadata: (jid, timestamp) => {
-      storeChatMetadata(jid, timestamp);
-    },
-    registeredChannels: () => new Set(Object.keys(registeredGroups)),
-  });
-
-  logger.info('Matrix channel connected');
-
-  // Start loops if not already running
-  if (!schedulerDeps) {
-    schedulerDeps = {
-      sendMessage,
-      registeredGroups: () => registeredGroups,
-      getSessions: () => sessions,
-      queue,
-      onProcess: (groupJid, proc, containerName) => queue.registerProcess(groupJid, proc, containerName),
-    };
-  }
-  startSchedulerLoop(schedulerDeps);
-  startIpcWatcher();
-  queue.setProcessMessagesFn(processGroupMessages);
-  recoverPendingMessages();
-  startMatrixMessageLoop();
-}
-
-async function startMatrixMessageLoop(): Promise<void> {
-  if (messageLoopRunning) {
-    logger.debug('Message loop already running, skipping duplicate start');
-    return;
-  }
-  messageLoopRunning = true;
-  logger.info(`NanoClaw running on Matrix (trigger: @${ASSISTANT_NAME})`);
-
-  while (true) {
-    try {
-      // Process buffered Matrix messages - store them in DB
-      const buffered = [...matrixMessageBuffer];
-      matrixMessageBuffer = [];
-
-      for (const msg of buffered) {
-        if (isMatrixJid(msg.chat_jid) && registeredGroups[msg.chat_jid]) {
-          storeDiscordMessage(msg); // Channel-agnostic message store
-        }
-      }
-
-      // Poll DB for new messages (same pattern as WhatsApp/Discord loop)
-      const jids = Object.keys(registeredGroups);
-      const { messages, newTimestamp } = getNewMessages(
-        jids,
-        lastTimestamp,
-        ASSISTANT_NAME,
-      );
-
-      if (messages.length > 0) {
-        logger.info({ count: messages.length }, 'New messages');
-
-        lastTimestamp = newTimestamp;
-        saveState();
-
-        const groupsWithMessages = new Set<string>();
-        for (const msg of messages) {
-          groupsWithMessages.add(msg.chat_jid);
-        }
-
-        for (const chatJid of groupsWithMessages) {
-          queue.enqueueMessageCheck(chatJid);
-        }
-      }
-    } catch (err) {
-      logger.error({ err }, 'Error in message loop');
-    }
-    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL));
-  }
-}
-
-/**
- * Register internal specialist agents (e.g., publisher).
- * These are "virtual" groups with internal JIDs that can be dispatched to by the main agent.
- * Idempotent -- skips registration if already present.
- */
-function registerInternalAgents(): void {
-  const internalAgents: Array<{
-    name: string;
-    folder: string;
-    jid: string;
-    containerConfig?: RegisteredGroup['containerConfig'];
-  }> = [
-    {
-      name: 'Publisher',
-      folder: 'publisher',
-      jid: 'agent:publisher@internal',
-      containerConfig: {
-        additionalMounts: [
-          {
-            hostPath: path.join(GROUPS_DIR, 'main', 'site'),
-            containerPath: 'site',
-            readonly: false,
-          },
-          {
-            hostPath: path.join(GROUPS_DIR, 'main', 'osint'),
-            containerPath: 'osint',
-            readonly: true,
-          },
-        ],
-      },
-    },
-  ];
-
-  for (const agent of internalAgents) {
-    if (registeredGroups[agent.jid]) {
-      logger.debug({ jid: agent.jid }, 'Internal agent already registered');
-      continue;
-    }
-
-    registerGroup(agent.jid, {
-      name: agent.name,
-      folder: agent.folder,
-      trigger: '', // Internal agents don't use triggers
-      added_at: new Date().toISOString(),
-      requiresTrigger: false,
-      containerConfig: agent.containerConfig,
+  // Kill and clean up orphaned NanoClaw containers from previous runs
+  try {
+    const output = execSync('docker ps --filter "name=nanoclaw-" --format "{{.Names}}"', {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      encoding: 'utf-8',
     });
-
-    logger.info(
-      { jid: agent.jid, name: agent.name },
-      'Internal agent registered',
-    );
+    const orphans = output.trim().split('\n').filter(Boolean);
+    for (const name of orphans) {
+      try {
+        execSync(`docker stop ${name}`, { stdio: 'pipe' });
+      } catch { /* already stopped */ }
+    }
+    if (orphans.length > 0) {
+      logger.info({ count: orphans.length, names: orphans }, 'Stopped orphaned containers');
+    }
+  } catch (err) {
+    logger.warn({ err }, 'Failed to clean up orphaned containers');
   }
 }
 
@@ -1330,97 +452,94 @@ async function main(): Promise<void> {
   initDatabase();
   logger.info('Database initialized');
   loadState();
-  registerInternalAgents();
 
   // Graceful shutdown handlers
   const shutdown = async (signal: string) => {
     logger.info({ signal }, 'Shutdown signal received');
-    if (emailWatcher) {
-      await emailWatcher.stop();
-    }
-    // Disconnect Matrix client if running
-    const { disconnectMatrix } = await import('./matrix-client.js');
-    await disconnectMatrix();
     await queue.shutdown(10000);
+    if (whatsapp) await whatsapp.disconnect();
+    if (matrixConnected) {
+      const { disconnectMatrix } = await import('./matrix-client.js');
+      await disconnectMatrix();
+    }
     process.exit(0);
   };
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));
 
-  // Start dashboard server
-  startDashboard();
+  // --- Channel setup ---
 
-  const channelsEnabled: string[] = [];
-
+  // WhatsApp (optional)
   if (WHATSAPP_ENABLED) {
-    channelsEnabled.push('WhatsApp');
-    await connectWhatsApp();
+    whatsapp = new WhatsAppChannel({
+      onMessage: (_chatJid, msg) => storeMessage(msg),
+      onChatMetadata: (_chatJid, timestamp) => storeChatMetadata(_chatJid, timestamp),
+      registeredGroups: () => registeredGroups,
+    });
+    await whatsapp.connect();
+    logger.info('WhatsApp connected');
   }
 
-  if (DISCORD_ENABLED) {
-    channelsEnabled.push('Discord');
-    await connectDiscordChannel();
-  }
-
+  // Matrix (optional)
   if (MATRIX_ENABLED) {
-    channelsEnabled.push('Matrix');
-    await connectMatrixChannel();
-  }
-
-  // Email sensor (not a channel — requires WhatsApp, Discord, or Matrix for responses)
-  if (EMAIL_ENABLED) {
-    // Find the main group JID
-    const mainGroupJid = Object.entries(registeredGroups).find(
-      ([, g]) => g.folder === MAIN_GROUP_FOLDER,
-    )?.[0];
-
-    if (mainGroupJid) {
-      emailWatcher = new EmailWatcher({
-        onEmail: (emailMsg) => {
-          const senderField = emailMsg.from === 'system'
-            ? 'system'
-            : `email:${emailMsg.from}`;
-
-          let content = `[EMAIL from ${emailMsg.from}]\nSubject: ${emailMsg.subject}\nDate: ${emailMsg.date}`;
-          if (emailMsg.attachments) {
-            content += `\nAttachments: ${emailMsg.attachments}`;
-          }
-          content += `\n\n${emailMsg.body}`;
-
-          const msg: NewMessage = {
-            id: `email-${emailMsg.uid}-${Date.now()}`,
-            chat_jid: mainGroupJid,
-            sender: senderField,
-            sender_name: `📧 ${senderField}`,
-            content,
-            timestamp: new Date().toISOString(),
-          };
-
-          storeDiscordMessage(msg);
-          queue.enqueueMessageCheck(mainGroupJid);
-        },
-      });
-
-      await emailWatcher.start();
-      logger.info('Email/IMAP sensor started');
-    } else {
-      logger.warn(
-        'EMAIL_ENABLED=true but no main group registered — skipping email watcher',
-      );
+    if (!MATRIX_HOMESERVER || !MATRIX_ACCESS_TOKEN || !MATRIX_USER_ID || !MATRIX_DEVICE_ID) {
+      throw new Error('MATRIX_HOMESERVER, MATRIX_ACCESS_TOKEN, MATRIX_USER_ID, and MATRIX_DEVICE_ID required when MATRIX_ENABLED=true');
     }
+    const { connectMatrix } = await import('./matrix-client.js');
+    await connectMatrix({
+      homeserver: MATRIX_HOMESERVER,
+      accessToken: MATRIX_ACCESS_TOKEN,
+      userId: MATRIX_USER_ID,
+      deviceId: MATRIX_DEVICE_ID,
+      registeredChannels: () => new Set(Object.keys(registeredGroups)),
+      onMessage: (msg: NewMessage) => {
+        storeMessage(msg);
+        emitDashboard('message_in', { group: msg.chat_jid, sender: msg.sender, text: msg.content.slice(0, 200) });
+      },
+      onMetadata: (jid: string, timestamp: string) => storeChatMetadata(jid, timestamp),
+      storePath: path.resolve(DATA_DIR, '..', 'store', 'matrix-crypto'),
+    });
+    matrixConnected = true;
+    logger.info('Matrix connected with E2E encryption');
   }
 
-  if (channelsEnabled.length === 0) {
-    logger.error(
-      'No channels enabled. Set MATRIX_ENABLED=true, DISCORD_ENABLED=true, or WHATSAPP_ENABLED=true in .env',
-    );
-    process.exit(1);
+  if (!whatsapp && !matrixConnected) {
+    logger.warn('No messaging channels enabled — running in scheduler-only mode');
   }
 
-  logger.info({ channels: channelsEnabled }, 'NanoClaw started');
+  // Start subsystems
+  startSchedulerLoop({
+    registeredGroups: () => registeredGroups,
+    getSessions: () => sessions,
+    queue,
+    onProcess: (groupJid, proc, containerName, groupFolder) => queue.registerProcess(groupJid, proc, containerName, groupFolder),
+    sendMessage: async (jid, rawText) => {
+      const text = whatsapp ? formatOutbound(whatsapp, rawText) : rawText;
+      if (text) await sendToChannel(jid, text);
+    },
+  });
+  startIpcWatcher({
+    sendMessage: (jid, text) => sendToChannel(jid, text),
+    registeredGroups: () => registeredGroups,
+    registerGroup,
+    syncGroupMetadata: (force) => whatsapp ? whatsapp.syncGroupMetadata(force) : Promise.resolve(),
+    getAvailableGroups,
+    writeGroupsSnapshot: (gf, im, ag, rj) => writeGroupsSnapshot(gf, im, ag, rj),
+  });
+  queue.setProcessMessagesFn(processGroupMessages);
+  recoverPendingMessages();
+  startDashboard();
+  startMessageLoop();
 }
 
-main().catch((err) => {
-  logger.error({ err }, 'Failed to start NanoClaw');
-  process.exit(1);
-});
+// Guard: only run when executed directly, not when imported by tests
+const isDirectRun =
+  process.argv[1] &&
+  new URL(import.meta.url).pathname === new URL(`file://${process.argv[1]}`).pathname;
+
+if (isDirectRun) {
+  main().catch((err) => {
+    logger.error({ err }, 'Failed to start NanoClaw');
+    process.exit(1);
+  });
+}
