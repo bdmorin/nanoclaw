@@ -317,6 +317,49 @@ Use available_groups.json to find the JID for a group. The folder name should be
         }
       ),
 
+      ...(isMain ? [
+        tool(
+          'dispatch',
+          `Dispatch a task to a specialist agent. The specialist runs in its own container with its own instructions and mounts.
+
+Available specialists:
+- "publisher": Publishes dossiers and intelligence to The Deportation Machine MkDocs site. Has access to site source (read-write) and OSINT dossiers (read-only).
+
+The specialist receives your prompt as its full instructions. Include everything it needs to know -- it has no conversation context.
+
+Priority:
+- "normal": Picked up by scheduler within 60 seconds
+- "urgent": Runs immediately
+
+Results appear in your chat when the specialist finishes.`,
+          {
+            target_agent: z.string().describe('Specialist name (e.g., "publisher")'),
+            prompt: z.string().describe('Detailed instructions for the specialist. Include all context it needs.'),
+            priority: z.enum(['normal', 'urgent']).default('normal').describe('normal = runs within 60s, urgent = runs immediately')
+          },
+          async (args) => {
+            const data = {
+              type: 'dispatch',
+              target_agent: args.target_agent,
+              prompt: args.prompt,
+              priority: args.priority || 'normal',
+              chatJid,
+              groupFolder,
+              timestamp: new Date().toISOString()
+            };
+
+            const filename = writeIpcFile(TASKS_DIR, data);
+
+            return {
+              content: [{
+                type: 'text',
+                text: `Dispatched to ${args.target_agent} (${args.priority || 'normal'} priority). Task file: ${filename}. Results will appear in this chat when complete.`
+              }]
+            };
+          }
+        ),
+      ] : []),
+
       tool(
         'fabric_youtube',
         `Extract insights from a YouTube video using fabric AI patterns.
@@ -454,6 +497,66 @@ Run 'fabric --listpatterns' equivalent to see all available patterns.`,
               });
             }, 180000);
           });
+        }
+      ),
+
+      tool(
+        'send_slack',
+        `Post a message to the configured Slack channel via incoming webhook.
+
+Use this to share updates, research findings, or notifications with the team Slack.
+Messages support Slack markdown formatting:
+- *bold* (single asterisks)
+- _italic_ (underscores)
+- \`code\` (backticks)
+- \`\`\`code blocks\`\`\` (triple backticks)
+- > quotes (greater than)
+- Bullet lists with -`,
+        {
+          text: z.string().describe('The message text to post to Slack'),
+          username: z.string().optional().describe('Override the bot username (default: "oilcloth")'),
+          icon_emoji: z.string().optional().describe('Override the bot icon emoji (default: ":robot_face:")')
+        },
+        async (args) => {
+          const webhookUrl = process.env.SLACK_WEBHOOK_URL;
+
+          if (!webhookUrl) {
+            return {
+              content: [{ type: 'text', text: 'SLACK_WEBHOOK_URL not configured. Add it to .env file.' }],
+              isError: true
+            };
+          }
+
+          try {
+            const payload = {
+              text: args.text,
+              username: args.username || 'oilcloth',
+              icon_emoji: args.icon_emoji || ':robot_face:'
+            };
+
+            const response = await fetch(webhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              return {
+                content: [{ type: 'text', text: `Slack error (${response.status}): ${errorText}` }],
+                isError: true
+              };
+            }
+
+            return {
+              content: [{ type: 'text', text: 'Message posted to Slack successfully.' }]
+            };
+          } catch (err) {
+            return {
+              content: [{ type: 'text', text: `Failed to post to Slack: ${err instanceof Error ? err.message : String(err)}` }],
+              isError: true
+            };
+          }
         }
       ),
 

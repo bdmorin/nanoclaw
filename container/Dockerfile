@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     ffmpeg \
-    && pip3 install --break-system-packages yt-dlp \
+    && pip3 install --break-system-packages yt-dlp imap-tools \
     && rm -rf /var/lib/apt/lists/*
 
 # Install fabric CLI (Go binary for AI pattern execution)
@@ -36,6 +36,9 @@ RUN chmod +x /usr/local/bin/fabric
 # Set Chromium path for agent-browser
 ENV AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
+
+# Enable Claude Code auto memory
+ENV CLAUDE_CODE_DISABLE_AUTO_MEMORY=0
 
 # Install agent-browser and claude-code globally
 RUN npm install -g agent-browser @anthropic-ai/claude-code

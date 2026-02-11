@@ -270,6 +270,8 @@ async function main(): Promise<void> {
     for await (const message of query({
       prompt,
       options: {
+        model: 'claude-opus-4-6',
+        betas: ['context-1m-2025-08-07'],
         cwd: '/workspace/group',
         resume: input.sessionId,
         systemPrompt: globalClaudeMd
