@@ -28,6 +28,9 @@ google*.html
 .idea/
 .vscode/
 
+# Cloned deployment repos
+groups/main/publishing/repos/
+
 # Misc
 agents-sdk-docs
 bdmorin-client_secret_*.json
