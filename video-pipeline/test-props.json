@@ -1,0 +1,294 @@
+{
+  "sections": [
+    {
+      "section": "name",
+      "narration_text": "Geraldo Lunas Campos. Fifty-five. Cuban. Father of four. He came to the United States legally in 1996. He lived in Rochester, New York for two decades.",
+      "audio_file": "audio/name.wav",
+      "audio_duration_seconds": 12.22,
+      "visual": {
+        "section": "name",
+        "duration_seconds": 12.22,
+        "layers": [
+          {
+            "type": "typography",
+            "content": "Geraldo Lunas Campos",
+            "style": "name_large",
+            "timing": {
+              "in": 0,
+              "hold": 4,
+              "out": 0.5
+            }
+          },
+          {
+            "type": "typography",
+            "content": "55  •  Cuba  •  Father of four",
+            "style": "subtitle",
+            "timing": {
+              "in": 2,
+              "hold": 4,
+              "out": 0.5
+            }
+          }
+        ],
+        "background": "#000000",
+        "transition_in": "fade_from_black",
+        "transition_out": "cut"
+      }
+    },
+    {
+      "section": "moment",
+      "narration_text": "On January 3rd, 2026, Campos stood in line for his medication at Camp East Montana. He asked for his asthma inhaler. A guard told him — this is from a sworn declaration — Shut up or we're going to make you faint. They put him on the ground. Five guards held him down while he was handcuffed. One put an arm around his neck and squeezed. Another detainee, watching through his cell window, heard Campos scream no puedo respirar — I can't breathe. Then he heard them trying to revive him. They could not keep him alive.",
+      "audio_file": "audio/moment.wav",
+      "audio_duration_seconds": 36.61,
+      "visual": {
+        "section": "moment",
+        "duration_seconds": 36.61,
+        "layers": [
+          {
+            "type": "typography",
+            "content": "\"Shut up or we're going to make you faint.\"",
+            "style": "witness_quote",
+            "source": "Sworn declaration — Henry Bolano, fellow detainee",
+            "timing": {
+              "in": 4,
+              "hold": 6,
+              "out": 0.5
+            }
+          },
+          {
+            "type": "typography",
+            "content": "Five guards held him down.\nOne put an arm around his neck\nand squeezed.",
+            "style": "narration_emphasis",
+            "timing": {
+              "in": 12,
+              "hold": 6,
+              "out": 0.5
+            }
+          },
+          {
+            "type": "typography",
+            "content": "\"No puedo respirar.\"\n— I can't breathe.",
+            "style": "witness_quote_primary",
+            "source": "Santos Jesús Flores, 47, watching through his cell window",
+            "timing": {
+              "in": 20,
+              "hold": 7,
+              "out": 1
+            }
+          },
+          {
+            "type": "typography",
+            "content": "\"I could hear them trying to revive him,\nbut they could not keep him alive.\"",
+            "style": "witness_quote",
+            "source": "Santos Jesús Flores — sworn declaration",
+            "timing": {
+              "in": 29,
+              "hold": 7,
+              "out": 1
+            }
+          }
+        ],
+        "background": "#000000",
+        "transition_in": "cut",
+        "transition_out": "fade_black"
+      }
+    },
+    {
+      "section": "record",
+      "narration_text": "ICE released a statement. They said staff observed Campos in distress and provided lifesaving measures. No mention of guards. No mention of force. When the Associated Press asked questions, the story changed: now it was a suicide attempt. When the El Paso County Medical Examiner completed the autopsy, the story changed again. Dr. Adam Gonzalez found neck hemorrhages, petechial hemorrhages in his eyelids, abrasions on his chest and knees. Cause of death: asphyxia due to neck and torso compression. Manner of death: homicide. ICE's response was to cite his criminal record.",
+      "audio_file": "audio/record.wav",
+      "audio_duration_seconds": 39.81,
+      "visual": {
+        "section": "record",
+        "duration_seconds": 39.81,
+        "layers": [
+          {
+            "type": "typography",
+            "content": "ICE Statement — January 9, 2026",
+            "style": "document_header",
+            "timing": {
+              "in": 0,
+              "hold": 2.5,
+              "out": 0.3
+            }
+          },
+          {
+            "type": "typography",
+            "content": "\"Staff observed him in distress\nand provided lifesaving measures.\"",
+            "style": "official_quote",
+            "timing": {
+              "in": 2,
+              "hold": 5,
+              "out": 0.5
+            }
+          },
+          {
+            "type": "typography",
+            "content": "ICE Statement — January 16, 2026",
+            "style": "document_header",
+            "timing": {
+              "in": 8,
+              "hold": 2.5,
+              "out": 0.3
+            }
+          },
+          {
+            "type": "typography",
+            "content": "\"Campos violently resisted security staff\nand continued to attempt to take his life.\"",
+            "style": "official_quote",
+            "timing": {
+              "in": 10,
+              "hold": 5,
+              "out": 0.5
+            }
+          },
+          {
+            "type": "typography",
+            "content": "El Paso County Medical Examiner",
+            "style": "document_header",
+            "timing": {
+              "in": 17,
+              "hold": 2.5,
+              "out": 0.3
+            }
+          },
+          {
+            "type": "typography",
+            "content": "Cause of death:\nAsphyxia due to neck and torso compression\n\nManner of death:\nHOMICIDE",
+            "style": "autopsy_finding",
+            "highlight": "HOMICIDE",
+            "highlight_color": "#dc2626",
+            "timing": {
+              "in": 19,
+              "hold": 9,
+              "out": 1
+            }
+          },
+          {
+            "type": "typography",
+            "content": "ICE's response:\ncited his criminal record.",
+            "style": "narration_flat",
+            "timing": {
+              "in": 30,
+              "hold": 5,
+              "out": 1
+            }
+          }
+        ],
+        "background": "#000000",
+        "transition_in": "cut",
+        "transition_out": "fade_black"
+      }
+    },
+    {
+      "section": "pattern",
+      "narration_text": "Eleven days later, another man died at Camp East Montana. Victor Manuel Diaz, thirty-six, from Nicaragua. This time, ICE sent the body to William Beaumont Army Medical Center — a military hospital at Fort Bliss that does not release autopsy reports to the public. The El Paso County medical examiner's office said they tried to take custody of the body. The federal government blocked them. Three men dead in six weeks at a facility run by a company headquartered in a single-family home in Virginia — a company with no prior corrections experience — on a 1.2 billion dollar contract — on the same Army base that held Japanese Americans during World War II.",
+      "audio_file": "audio/pattern.wav",
+      "audio_duration_seconds": 44.81,
+      "visual": {
+        "section": "pattern",
+        "duration_seconds": 44.81,
+        "layers": [
+          {
+            "type": "typography",
+            "content": "11 days later",
+            "style": "time_marker",
+            "timing": {
+              "in": 0,
+              "hold": 2.5,
+              "out": 0.3
+            }
+          },
+          {
+            "type": "typography",
+            "content": "Victor Manuel Diaz, 36, Nicaragua\nDied January 14, 2026\nSame facility.",
+            "style": "name_secondary",
+            "timing": {
+              "in": 2.5,
+              "hold": 5,
+              "out": 0.5
+            }
+          },
+          {
+            "type": "typography",
+            "content": "ICE sent his body to a military hospital\nthat does not release autopsy reports.",
+            "style": "narration_emphasis",
+            "timing": {
+              "in": 8,
+              "hold": 6,
+              "out": 0.5
+            }
+          },
+          {
+            "type": "typography",
+            "content": "3 dead in 6 weeks.",
+            "style": "statistic",
+            "timing": {
+              "in": 30,
+              "hold": 5,
+              "out": 1
+            }
+          }
+        ],
+        "background": "#000000",
+        "transition_in": "fade_from_black",
+        "transition_out": "fade_black"
+      }
+    },
+    {
+      "section": "question",
+      "narration_text": "No guard has been charged. No guard has been named. ICE has not released the surveillance footage. A federal judge had to intervene to stop ICE from deporting the eyewitnesses. Geraldo Lunas Campos's four children want to know why their father was killed for asking for his inhaler.",
+      "audio_file": "audio/question.wav",
+      "audio_duration_seconds": 18.43,
+      "visual": {
+        "section": "question",
+        "duration_seconds": 18.43,
+        "layers": [
+          {
+            "type": "typography",
+            "content": "No guard has been charged.\nNo guard has been named.",
+            "style": "narration_emphasis",
+            "timing": {
+              "in": 0,
+              "hold": 5,
+              "out": 0.5
+            }
+          },
+          {
+            "type": "typography",
+            "content": "A federal judge had to intervene\nto stop ICE from deporting\nthe eyewitnesses.",
+            "style": "narration_emphasis",
+            "timing": {
+              "in": 6,
+              "hold": 5,
+              "out": 0.5
+            }
+          },
+          {
+            "type": "typography",
+            "content": "Geraldo Lunas Campos",
+            "style": "name_large",
+            "timing": {
+              "in": 12,
+              "hold": 5,
+              "out": 2
+            }
+          },
+          {
+            "type": "typography",
+            "content": "55  •  Cuba  •  Father of four",
+            "style": "subtitle",
+            "timing": {
+              "in": 13,
+              "hold": 4,
+              "out": 2
+            }
+          }
+        ],
+        "background": "#000000",
+        "transition_in": "cut",
+        "transition_out": "fade_to_black_slow"
+      }
+    }
+  ]
+}

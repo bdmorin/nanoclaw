@@ -1,0 +1,29 @@
+{
+  "name": "video-pipeline",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts DossierVideo --props ./props.json",
+    "render:test": "remotion render src/index.ts DossierVideo --props ./test-props.json --gl=angle-egl",
+    "build": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@remotion/bundler": "^4.0.421",
+    "@remotion/cli": "^4.0.421",
+    "@remotion/media-utils": "^4.0.421",
+    "@remotion/player": "^4.0.421",
+    "@remotion/renderer": "^4.0.421",
+    "@types/react": "^19.2.13",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "remotion": "^4.0.421",
+    "typescript": "^5.9.3"
+  }
+}

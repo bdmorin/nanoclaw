@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voice Experiments — Oilcloth TTS</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #e0e0e0; font-family: 'Inter', system-ui, sans-serif; padding: 2rem; max-width: 900px; margin: 0 auto; }
+  h1 { color: #fff; margin-bottom: 0.5rem; font-size: 1.5rem; }
+  .subtitle { color: #888; margin-bottom: 2rem; font-size: 0.9rem; }
+  .section { margin-bottom: 2.5rem; }
+  .section-title { color: #dc2626; font-size: 1.1rem; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.1em; }
+  .experiment { background: #141414; border: 1px solid #222; border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 0.75rem; }
+  .exp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+  .exp-name { font-weight: 600; color: #fff; }
+  .exp-meta { color: #666; font-size: 0.8rem; }
+  .exp-desc { color: #999; font-size: 0.85rem; margin-bottom: 0.75rem; }
+  audio { width: 100%; height: 40px; }
+  audio::-webkit-media-controls-panel { background: #1a1a1a; }
+  .winner { border-color: #dc2626; }
+  .tag { display: inline-block; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; padding: 2px 8px; font-size: 0.7rem; color: #aaa; margin-right: 4px; }
+  .tag.rec { border-color: #dc2626; color: #dc2626; }
+  .note { background: #1a1a0a; border: 1px solid #333; border-radius: 8px; padding: 1rem; margin-bottom: 2rem; color: #cca; font-size: 0.85rem; }
+  hr { border: none; border-top: 1px solid #222; margin: 2rem 0; }
+</style>
+</head>
+<body>
+
+<h1>Voice Experiments</h1>
+<p class="subtitle">Oilcloth TTS — ElevenLabs Multilingual v2 — Campos Test Case</p>
+
+<div class="note">
+  <strong>What to listen for:</strong> Gravity. Does the voice convey the weight of what happened?
+  Does the name sound right? Does the delivery let the facts do the work, or is the voice <em>performing</em> emotion?
+  <br><br>
+  <strong>Text normalization:</strong> "Geraldo" spelled as "Heraldo" for correct Spanish G→H pronunciation.
+  "1996" written as "nineteen ninety-six". "World War II" → "World War Two".
+</div>
+
+<div class="section">
+  <div class="section-title">Round 1 — Voice Selection (Name Intro)</div>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Sarah <span class="tag rec">recommended</span></span>
+      <span class="exp-meta">stability: 0.6 · style: 0.4</span>
+    </div>
+    <div class="exp-desc">Mature, Reassuring, Confident — American</div>
+    <audio controls preload="none" src="audio/voice-11labs-sarah.mp3"></audio>
+  </div>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Matilda</span>
+      <span class="exp-meta">stability: 0.6 · style: 0.4</span>
+    </div>
+    <div class="exp-desc">Knowledgable, Professional — American</div>
+    <audio controls preload="none" src="audio/voice-11labs-matilda.mp3"></audio>
+  </div>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Alice</span>
+      <span class="exp-meta">stability: 0.6 · style: 0.4</span>
+    </div>
+    <div class="exp-desc">Clear, Engaging Educator — British</div>
+    <audio controls preload="none" src="audio/voice-11labs-alice.mp3"></audio>
+  </div>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Lily</span>
+      <span class="exp-meta">stability: 0.6 · style: 0.4</span>
+    </div>
+    <div class="exp-desc">Velvety Actress — British</div>
+    <audio controls preload="none" src="audio/voice-11labs-lily.mp3"></audio>
+  </div>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">River <span class="tag">neutral gender</span></span>
+      <span class="exp-meta">stability: 0.5 · style: 0.4</span>
+    </div>
+    <div class="exp-desc">Relaxed, Neutral, Informative — American</div>
+    <audio controls preload="none" src="audio/exp-river-name.mp3"></audio>
+  </div>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Bella</span>
+      <span class="exp-meta">stability: 0.5 · style: 0.4</span>
+    </div>
+    <div class="exp-desc">Professional, Bright, Warm — American</div>
+    <audio controls preload="none" src="audio/voice-11labs-sarah.mp3"></audio>
+  </div>
+</div>
+
+<hr>
+
+<div class="section">
+  <div class="section-title">Round 2 — Emotional Range (Moment Section)</div>
+  <p class="exp-desc" style="margin-bottom: 1rem;">The hardest passage: guards holding Campos down, "no puedo respirar," they could not keep him alive.</p>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Sarah — Emotional <span class="tag">stability: 0.35 · style: 0.7</span></span>
+    </div>
+    <div class="exp-desc">Low stability, high style — maximum expressiveness</div>
+    <audio controls preload="none" src="audio/exp-sarah-emotional.mp3"></audio>
+  </div>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Sarah — Standard <span class="tag">stability: 0.5 · style: 0.5</span></span>
+    </div>
+    <div class="exp-desc">Middle settings from first round</div>
+    <audio controls preload="none" src="audio/voice-11labs-sarah-moment.mp3"></audio>
+  </div>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">River — Moment <span class="tag">stability: 0.5 · style: 0.4</span></span>
+    </div>
+    <div class="exp-desc">Neutral delivery — letting facts carry the weight</div>
+    <audio controls preload="none" src="audio/exp-river-moment.mp3"></audio>
+  </div>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Bella — Moment <span class="tag">stability: 0.45 · style: 0.5</span></span>
+    </div>
+    <div class="exp-desc">Professional warmth with moderate expression</div>
+    <audio controls preload="none" src="audio/exp-bella-moment.mp3"></audio>
+  </div>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Matilda — Moment <span class="tag">stability: 0.5 · style: 0.5</span></span>
+    </div>
+    <div class="exp-desc">Professional/clinical tone</div>
+    <audio controls preload="none" src="audio/voice-11labs-matilda-moment.mp3"></audio>
+  </div>
+</div>
+
+<hr>
+
+<div class="section">
+  <div class="section-title">Round 3 — Factual Delivery (Record Section)</div>
+  <p class="exp-desc" style="margin-bottom: 1rem;">ICE statements vs autopsy findings. This section should be flat, clinical — let the contradiction speak.</p>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Sarah — Restrained <span class="tag rec">recommended for facts</span></span>
+      <span class="exp-meta">stability: 0.7 · style: 0.2</span>
+    </div>
+    <div class="exp-desc">High stability, low style — factual, steady, minimal performance</div>
+    <audio controls preload="none" src="audio/exp-sarah-restrained-record.mp3"></audio>
+  </div>
+</div>
+
+<hr>
+
+<div class="section">
+  <div class="section-title">Round 4 — Pronunciation (Name)</div>
+  <p class="exp-desc" style="margin-bottom: 1rem;">Testing Spanish name pronunciation. "Geraldo" spelled as "Heraldo" to get the soft G sound.</p>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Sarah — Original spelling <span class="tag">Geraldo</span></span>
+    </div>
+    <div class="exp-desc">Whisper hears: "Geraldo Luna's Campos"</div>
+    <audio controls preload="none" src="audio/voice-11labs-sarah.mp3"></audio>
+  </div>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Sarah — H-spelling <span class="tag rec">Heraldo</span></span>
+    </div>
+    <div class="exp-desc">Whisper hears: "Heraldo Loonas Campos" — correct Spanish pronunciation</div>
+    <audio controls preload="none" src="audio/exp-sarah-heraldo-name.mp3"></audio>
+  </div>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Sarah — Phonetic spelling <span class="tag">Heraldo Loonas</span></span>
+    </div>
+    <div class="exp-desc">More aggressive phonetic hint</div>
+    <audio controls preload="none" src="audio/exp-sarah-phonetic-name.mp3"></audio>
+  </div>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Sarah — SSML IPA <span class="tag">broken</span></span>
+    </div>
+    <div class="exp-desc">SSML phoneme tags — model skipped the name entirely. Don't use this approach.</div>
+    <audio controls preload="none" src="audio/exp-sarah-ssml-name.mp3"></audio>
+  </div>
+</div>
+
+<hr>
+
+<div class="section">
+  <div class="section-title">Kokoro Comparison (Previous Session)</div>
+  <p class="exp-desc" style="margin-bottom: 1rem;">For reference — these are the Kokoro samples from our first render.</p>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Kokoro af_heart — Name</span>
+    </div>
+    <audio controls preload="none" src="audio/name.wav"></audio>
+  </div>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Kokoro af_heart — Moment</span>
+    </div>
+    <audio controls preload="none" src="audio/moment.wav"></audio>
+  </div>
+</div>
+
+<hr>
+
+<div class="section">
+  <div class="section-title">Video Output</div>
+
+  <div class="experiment">
+    <div class="exp-header">
+      <span class="exp-name">Campos Test Render (Kokoro audio)</span>
+    </div>
+    <div class="exp-desc">First render from previous session — Kokoro af_heart voice</div>
+    <video controls preload="none" width="270" height="480" src="../out/campos-test.mp4"></video>
+  </div>
+</div>
+
+</body>
+</html>
