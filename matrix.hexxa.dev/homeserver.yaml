@@ -1,0 +1,156 @@
+# Matrix Synapse Homeserver Configuration
+# Domain: hexxa.dev (server_name) | matrix.hexxa.dev (public endpoint)
+# Security: Federation OFF, E2E encryption ON, invite-only registration
+# Generated base config and then manually configured for security
+
+# === SERVER IDENTITY ===
+server_name: "hexxa.dev"
+public_baseurl: "https://matrix.hexxa.dev"
+report_stats: false
+serve_server_wellknown: true
+
+# === DATABASE (PostgreSQL) ===
+database:
+  name: psycopg2
+  args:
+    user: synapse
+    # IMPORTANT: Replace CHANGE_ME_POSTGRES_PASSWORD with actual password from .env
+    password: "CHANGE_ME_POSTGRES_PASSWORD"
+    database: synapse
+    host: synapse-postgres
+    port: 5432
+    cp_min: 5
+    cp_max: 10
+
+# === REGISTRATION — Invite-only ===
+# Users can only register with a valid registration token
+# Generate tokens via admin API after deployment
+enable_registration: true
+registration_requires_token: true
+enable_registration_captcha: false
+allow_guest_access: false
+
+# Shared secret for creating users via register_new_matrix_user command
+# IMPORTANT: Generate with: openssl rand -hex 32
+registration_shared_secret: "CHANGE_ME_REGISTRATION_SECRET"
+
+# === ENCRYPTION — Force E2E on ALL rooms ===
+encryption_enabled_by_default_for_room_type: "all"
+
+# === FEDERATION — Disabled (closed network) ===
+# This homeserver will NOT federate with other Matrix servers
+federation_domain_whitelist: []
+# Alternatively, you can use: federation_domain_blacklist: ["*"]
+
+# === MESSAGE RETENTION — 90 day default ===
+# Rooms can configure their own retention within these bounds
+retention:
+  enabled: true
+  default_policy:
+    min_lifetime: 1d
+    max_lifetime: 90d
+  allowed_lifetime_min: 1d
+  allowed_lifetime_max: 365d
+  purge_jobs:
+    - longest_max_lifetime: 3d
+      interval: 12h
+    - shortest_max_lifetime: 3d
+      interval: 1d
+
+# === PRIVACY SETTINGS ===
+# Disable presence (online/offline status) to reduce metadata leakage
+presence:
+  enabled: false
+
+# Disable URL previews to prevent external requests
+url_preview_enabled: false
+
+# Room directory is private (not world-readable)
+room_directory:
+  visibility:
+    world_readable: false
+
+# User directory search limited to known users only
+user_directory:
+  enabled: true
+  search_all_users: false
+  prefer_local_users: true
+
+# Disable identity server (no phone/email discovery)
+trusted_third_party_id_servers: []
+
+# === RATE LIMITING ===
+rc_message:
+  per_second: 0.5
+  burst_count: 10
+
+rc_registration:
+  per_second: 0.05
+  burst_count: 3
+
+rc_login:
+  address:
+    per_second: 0.1
+    burst_count: 5
+  account:
+    per_second: 0.1
+    burst_count: 5
+  failed_attempts:
+    per_second: 0.05
+    burst_count: 3
+
+# === MEDIA STORAGE ===
+media_store_path: "/data/media_store"
+max_upload_size: "50M"
+max_image_pixels: "32M"
+
+# Don't allow remote servers to ask us to download media
+url_preview_enabled: false
+
+# === LISTENERS ===
+listeners:
+  - port: 8008
+    tls: false
+    type: http
+    x_forwarded: true
+    bind_addresses: ['::']
+    resources:
+      - names: [client, federation]
+        compress: false
+
+# === SIGNING KEYS ===
+# These will be generated automatically on first run
+# signing_key_path: "/data/hexxa.dev.signing.key"
+
+# === LOGGING ===
+log_config: "/data/hexxa.dev.log.config"
+
+# === ADDITIONAL SECURITY ===
+# Disable room list publication
+allow_public_rooms_over_federation: false
+
+# Disable profile lookup over federation
+allow_profile_lookup_over_federation: false
+
+# Require authenticated requests for room aliases
+require_auth_for_profile_requests: true
+
+# Disable room invites from unknown users
+block_non_admin_invites: false
+
+# Enable push notifications (for mobile clients if added later)
+push:
+  include_content: true
+
+# === TURN SERVER (VoIP/Video - currently disabled) ===
+# When VoIP/video is needed, add coturn configuration here
+# turn_uris: []
+# turn_shared_secret: ""
+# turn_user_lifetime: 86400000
+
+# === EMAIL (currently disabled) ===
+# When email invites/notifications are needed, configure here
+# email:
+#   smtp_host: ""
+#   smtp_port: 587
+#   notif_from: "Matrix <noreply@hexxa.dev>"

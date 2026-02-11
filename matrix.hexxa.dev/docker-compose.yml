@@ -1,0 +1,80 @@
+version: "3.8"
+
+# Matrix Synapse Homeserver Stack for Coolify
+# Components: Synapse v1.147.0, PostgreSQL 16, Element Web v1.12.10
+# Domains: matrix.hexxa.dev (synapse), chat.hexxa.dev (element)
+
+services:
+  synapse:
+    image: ghcr.io/element-hq/synapse:v1.147.0
+    container_name: synapse
+    restart: unless-stopped
+    volumes:
+      - ./synapse-data:/data
+    environment:
+      # Synapse doesn't natively support env var substitution in homeserver.yaml
+      # The POSTGRES_PASSWORD must be hardcoded in homeserver.yaml after generation
+      - SYNAPSE_SERVER_NAME=hexxa.dev
+      - SYNAPSE_REPORT_STATS=no
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # Note: ghcr.io/element-hq/synapse image doesn't include curl by default
+      # Using python to check the health endpoint instead
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8008/health')\" || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    labels:
+      # Traefik labels for Coolify routing
+      - "traefik.enable=true"
+      - "traefik.http.routers.matrix-synapse.rule=Host(`matrix.hexxa.dev`)"
+      - "traefik.http.routers.matrix-synapse.entrypoints=https"
+      - "traefik.http.routers.matrix-synapse.tls=true"
+      - "traefik.http.routers.matrix-synapse.tls.certresolver=letsencrypt"
+      - "traefik.http.services.matrix-synapse.loadbalancer.server.port=8008"
+    networks:
+      - matrix
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: synapse-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: synapse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: synapse
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U synapse"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - matrix
+
+  element-web:
+    image: vectorim/element-web:v1.12.10
+    container_name: element-web
+    restart: unless-stopped
+    volumes:
+      - ./element-config.json:/app/config.json:ro
+    labels:
+      # Traefik labels for Coolify routing
+      - "traefik.enable=true"
+      - "traefik.http.routers.matrix-element.rule=Host(`chat.hexxa.dev`)"
+      - "traefik.http.routers.matrix-element.entrypoints=https"
+      - "traefik.http.routers.matrix-element.tls=true"
+      - "traefik.http.routers.matrix-element.tls.certresolver=letsencrypt"
+      - "traefik.http.services.matrix-element.loadbalancer.server.port=80"
+    networks:
+      - matrix
+
+networks:
+  matrix:
+    name: matrix-${COMPOSE_PROJECT_NAME:-default}
+    driver: bridge
