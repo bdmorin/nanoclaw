@@ -26,6 +26,10 @@ groups/global/*
 .env
 client_secret_*.json
 oauth-url.txt
+.ssh/
+
+# Sensitive documents
+Invoice-*.pdf
 
 # Google verification (public but not repo-relevant)
 google*.html
@@ -41,8 +45,24 @@ google*.html
 groups/main/publishing/repos/
 groups/main/site/
 
+# Intelligence platform
+intelligence/node_modules/
+intelligence/dist/
+
+# Ansible
+ansible/.venv/
+
 # Misc
 agents-sdk-docs
+# Stray session dumps
+2026-*-command-message*.txt
+# Binary artifacts
+*.zip
+nanobanana-output/
+billing.flokinet.is_*.png
 bdmorin-client_secret_*.json
 container/fabric
 .claude/error-log.jsonl
+
+# bv (beads viewer) local config and caches
+.bv/

@@ -1,0 +1,95 @@
+enum PersonStatus {
+  ACTIVE
+  INACTIVE
+  DECEASED
+  UNKNOWN
+}
+
+enum OrgType {
+  FEDERAL_AGENCY
+  STATE_AGENCY
+  CONTRACTOR
+  POLITICAL
+  NGO
+  UNKNOWN
+}
+
+enum IncidentType {
+  SWEEP
+  ARREST
+  DEPORTATION
+  DETENTION
+  VIOLENCE
+  POLICY_ACTION
+  SHOOTING
+  PURSUIT
+  OTHER
+}
+
+enum DatePrecision {
+  EXACT
+  DATE
+  MONTH
+  YEAR
+  APPROXIMATE
+}
+
+enum IncidentStatus {
+  CONFIRMED
+  ALLEGED
+  DISPUTED
+  RETRACTED
+}
+
+enum SourceType {
+  FOIA
+  COURT_FILING
+  MEDIA
+  WITNESS
+  LEAKED
+  OFFICIAL
+  SOCIAL_MEDIA
+  OTHER
+}
+
+enum SourceReliability {
+  HIGH
+  MEDIUM
+  LOW
+  UNKNOWN
+}
+
+enum FacilityType {
+  ICE_DETENTION
+  CBP_HOLDING
+  PRIVATE_PRISON
+  MILITARY
+  CONVERTED
+  TENT_CAMP
+  FOREIGN_PRISON
+  OTHER
+}
+
+enum FacilityStatus {
+  ACTIVE
+  CLOSED
+  PLANNED
+  BLOCKED
+  RUMORED
+  PURCHASED
+  OPERATIONAL
+}
+
+enum PoliticalStatus {
+  CURRENT
+  FORMER
+  CANDIDATE
+  APPOINTED
+}
+
+enum ConfidenceMethod {
+  DIRECT
+  CORROBORATED
+  INFERRED
+  UNVERIFIED
+}

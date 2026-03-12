@@ -61,6 +61,37 @@ Text inside `<internal>` tags is logged but not sent to the user. If you've alre
 
 When working as a sub-agent or teammate, only use `send_message` if instructed to by the main agent.
 
+## Beads (Task Management)
+
+You track work with **beads** — a git-backed issue tracker in `.beads/issues.jsonl`. Use the `bd` CLI.
+
+### Session Start
+Run `bd ready` first. This shows only unblocked, actionable work. Don't scan the full backlog — `bd ready` is your starting point.
+
+### During Work
+- Create a bead for anything that'll take >2 minutes
+- Keep beads atomic: 5-10 minute chunks, not multi-hour epics
+- Use `bd update <id> --status in_progress` when you start work
+- Use dependencies (`blocks`, `blocked_by`) to sequence multi-step work
+- If you discover new work while on a task, create a new bead — don't scope-creep
+
+### Session End ("Land the Plane")
+Before your session ends:
+1. Update all in-progress beads with current status
+2. Close completed beads: `bd close <id>`
+3. Create beads for any discovered but unstarted work
+4. Add notes to `lessons.md` if you learned something reusable
+
+### Key Commands
+```bash
+bd ready                             # What's actionable now?
+bd list                              # Full backlog
+bd create --title "..." --desc "..." # New task
+bd update <id> --status in_progress  # Start work
+bd close <id>                        # Complete
+bd show <id>                         # Details + deps
+```
+
 ## Memory
 
 The `conversations/` folder contains searchable history of past conversations. Use this to recall context from previous sessions.
@@ -166,10 +197,13 @@ You can post messages to the work Slack channel:
 
 - `mcp__nanoclaw__send_slack` - Post a message to Slack
 
-Use this to share:
-- Research findings and completed dossiers
-- Important updates or discoveries
-- Scheduled task outputs worth sharing
+**⚠️ OPSEC: This Slack webhook goes to brahn's WORK Slack.**
+**NEVER post Deportation Machine, OSINT, dossier, or ICE/CBP content to Slack.**
+**Only post non-sensitive technical updates (e.g., Claude Code changelog).**
+
+Use this ONLY for:
+- Claude Code changelog updates
+- General technical notifications brahn explicitly requests
 
 **Slack markdown** (different from Discord):
 - *bold* (single asterisks)

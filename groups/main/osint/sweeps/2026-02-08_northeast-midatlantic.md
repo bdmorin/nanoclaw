@@ -68,9 +68,15 @@
 **Date:** February 3, 2026
 **Priority:** 3
 **Type:** facility / legal
-**Victim(s):** N/A (potential future capacity: 1,500 detainees)
-**Location:** Robert Milligan Parkway, Merrimack, NH
+**Victim(s):** N/A (potential future capacity: see note)
+**Location:** 50 Robert Millyard Parkway, Merrimack, NH (43-acre warehouse)
 **Details:** Documents obtained by the ACLU of New Hampshire via public records request confirm the federal government plans to purchase and convert a 43-acre warehouse into an ICE facility in Merrimack. ICE wrote to the NH Division of Historical Resources on Jan 9 stating intent to "purchase, occupy and rehabilitate" the property. The facility is part of a national network of 23 warehouses to be converted into detention centers capable of holding up to 80,000 migrants. State officials, including the Department of Natural and Cultural Resources, knew about the plans for weeks before the public was informed.
+
+**Capacity reconciliation (updated 2026-02-18):** Three sources give different numbers:
+- **400-600 beds** — leaked DHS documents cited in Scripps News video (Bn3tCprcMqg)
+- **1,000+ beds** — NH Governor's office published DHS document (`governor.nh.gov`), also Peace and Justice Post citing Ayotte docs
+- **1,500 beds** — original sweep estimate (likely derived from network-wide per-facility averages)
+Best estimate: **400-1,000 beds** based on primary DHS documents. The 1,500 figure appears to be an extrapolation. Target activation: November 30, 2026. Cost: $158M retrofit + $146M operations (first 3 years).
 **Source(s):**
 - https://newhampshirebulletin.com/2026/02/03/new-documents-confirm-federal-government-plans-to-put-an-ice-facility-in-merrimack/
 - https://www.nhpr.org/nh-news/2026-02-03/merrimack-warehouse-ice-immigrant-detention-center-50-robert-millyard-parkway-ayotte-dhs

@@ -29,7 +29,7 @@ Content-Type: application/json
 - **API key**: `ELEVENLABS_API_KEY` in `.env` (allowlisted in container-runner.ts)
 - **Model**: `eleven_multilingual_v2`
 - **Tier**: Creator ($22/mo, ~107K chars/month)
-- **Voice**: TBD — user is auditioning voices. May clone Andrea's voice.
+- **Voice**: oilcloth custom voice — `vA14s8N3dYt3Y0g5ba9b`
 - **Voice candidates tested**: Sarah (EXAVITQu4vr4xnSDxMaL), Matilda (XrExE9yKIg1WjnnlVkGX), River (SAz9YHcvj6GT2YYXdXww), Bella (hpp4J3VqNfWAUOO0d1Us), Alice, Lily
 - **Settings**: `voice_settings: { stability, similarity_boost, style }` — vary per section type
   - Emotional sections: `stability: 0.35-0.5, style: 0.5-0.7`

@@ -1,0 +1,24 @@
+{
+  "name": "nanoclaw-intelligence",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "migrate": "bun run src/migrate.ts",
+    "ingest": "bun run ingest/run-all.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "neo4j-driver": "^5.27.0",
+    "@neo4j/graphql": "^6.5.0",
+    "graphql": "^16.10.0",
+    "graphql-yoga": "^5.10.0",
+    "glob": "^11.0.0",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.0",
+    "typescript": "^5.7.0"
+  }
+}

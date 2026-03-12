@@ -1,4 +1,4 @@
-# Intelligence Architecture - The Deportation Machine
+# Intelligence Architecture - Mortui Vivos Docent
 
 **Last Updated:** 2026-02-07 04:30 UTC
 **Status:** Foundation Complete, Systems Operational

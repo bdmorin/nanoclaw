@@ -192,7 +192,7 @@ Active chapters reported across multiple states. Known activity in:
 4. Public ridicule (clown music, Walter Masterson) degrades recruitment appeal
 5. Identity concealment suggests members fear public exposure
 
-### Connection to Deportation Machine
+### Connection to Mortui Vivos Docent
 Thomas Rousseau stated at the 2026 March for Life:
 > "ICE is deporting a lot of people, but it's not enough"
 

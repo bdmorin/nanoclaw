@@ -1,69 +1,52 @@
 # Claude Code Changelog - Recent Updates
 
-## Latest Version: 2.1.38 ⭐ NEW
+## Latest Version: 2.1.42 ⭐ NEW
 
-### Bug Fixes & Security
-- Fixed VS Code terminal scroll-to-top regression introduced in 2.1.37
-- Fixed Tab key queueing slash commands instead of autocompleting
-- Fixed bash permission matching for commands using environment variable wrappers
-- Fixed text between tool uses disappearing when not using streaming
-- Fixed duplicate sessions when resuming in VS Code extension
-- Improved heredoc delimiter parsing to prevent command smuggling
-- Blocked writes to `.claude/skills` directory in sandbox mode
+### Bug Fixes & Improvements
+- Fixed `/resume` showing interrupt messages as session titles
+- Fixed Opus 4.6 launch announcement appearing to Bedrock, Vertex, and Foundry users who don't have access
+- Improved error messages for dimension limit violations with multiple images, now includes `/compact` suggestion
 
 ---
 
-## Version 2.1.37
+## Version 2.1.41
 
-### Bug Fix
-- Fixed an issue where /fast was not immediately available after enabling /extra-usage
-
----
-
-## Version 2.1.36
-
-### Fast Mode for Opus 4.6
-- Fast mode is now available for Opus 4.6. Learn more at https://code.claude.com/docs/en/fast-mode
-
----
-
-## Version 2.1.34
-
-### Bug Fixes
-- Fixed a crash when agent teams setting changed between renders
-- **SECURITY FIX:** Fixed a bug where commands excluded from sandboxing could bypass the Bash ask permission rule when `autoAllowBashIfSandboxed` was enabled
-
----
-
-## Version 2.1.33
-
-### Agent Teams & Hooks
-- Fixed agent teammate sessions in tmux to send and receive messages
-- Fixed warnings about agent teams not being available on your current plan
-- Added `TeammmateIdle` and `TaskCompleted` hook events for multi-agent workflows
-- Added support for restricting which sub-agents can be spawned via `Task(agent_type)` syntax
-- Added `memory` frontmatter field support for agents with `user`, `project`, or `local` scope
-- Added plugin name to skill descriptions and `/skills` menu
-
-### VSCode Updates
-- Added support for remote sessions, allowing OAuth users to browse and resume sessions from claude.ai
-- Added git branch and message count to the session picker
+### Bug Fixes & Improvements
+- Fixed AWS auth refresh hanging indefinitely by adding a 3-minute timeout
+- Added `claude auth login`, `claude auth status`, and `claude auth logout` CLI subcommands
+- Added Windows ARM64 (win32-arm64) native binary support
+- Improved `/rename` to auto-generate session name from conversation context when called without arguments
+- Improved narrow terminal layout for prompt footer
+- Fixed file resolution failing for @-mentions with anchor fragments (e.g., `@README.md#installation`)
+- Fixed FileReadTool blocking the process on FIFOs, `/dev/stdin`, and large files
+- Fixed background task notifications not being delivered in streaming Agent SDK mode
+- Fixed cursor jumping to end on each keystroke in classifier rule input
+- Fixed markdown link display text being dropped for raw URL
+- Fixed auto-compact failure error notifications being shown to users
+- Fixed permission wait time being included in subagent elapsed time display
+- Fixed proactive ticks firing while in plan mode
+- Fixed clear stale permission rules when settings change on disk
+- Fixed hook blocking errors showing stderr content in UI
 
 ---
 
-## Version 2.1.32
+## Version 2.1.39
 
-### Major Features
-- Claude Opus 4.6 is now available!
-- Added research preview agent teams feature for multi-agent collaboration
-- Claude now automatically records and recalls memories as it works
-- Added "Summarize from here" to the message selector for partial conversation summarization
-
-### Improvements
-- Skills in `.claude/skills/` within additional directories are now loaded automatically
-- Fixed `@` file completion showing incorrect relative paths
-- Fixed Bash tool heredoc issues with JavaScript template literals
+### Bug Fixes & Improvements
+- Added guard against launching Claude Code inside another Claude Code session
+- Fixed Agent Teams using wrong model identifier for Bedrock, Vertex, and Foundry customers
+- Fixed a crash when MCP tools return image content during streaming
+- Fixed /resume session previews showing raw XML tags instead of readable command names
+- Improved model error messages for Bedrock/Vertex/Foundry users with fallback suggestions
+- Fixed plugin browse showing misleading "Space to Toggle" hint for already-installed plugins
+- Fixed hook blocking errors (exit code 2) not showing stderr to the user
+- Added `speed` attribute to OTel events and trace spans for fast mode visibility
+- Improved terminal rendering performance
+- Fixed fatal errors being swallowed instead of displayed
+- Fixed process hanging after session close
+- Fixed character loss at terminal screen boundary
+- Fixed blank lines in verbose transcript view
 
 ---
 
-**Last checked:** 2026-02-10 UTC
+**Last checked:** 2026-02-13 UTC

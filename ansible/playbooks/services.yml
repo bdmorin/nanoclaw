@@ -1,0 +1,115 @@
+---
+# Services: Caddy reverse proxy + static site
+- hosts: iceland
+  tasks:
+    # --- Caddy installation from official repo ---
+    - name: Install prerequisites for Caddy repo
+      ansible.builtin.apt:
+        name:
+          - debian-keyring
+          - debian-archive-keyring
+          - apt-transport-https
+          - gpg
+        state: present
+
+    - name: Add Caddy GPG key
+      ansible.builtin.shell: |
+        curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+
+    - name: Add Caddy apt repository
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/caddy-stable.list
+        content: "deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main\n"
+        mode: "0644"
+
+    - name: Update apt cache after adding Caddy repo
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install Caddy
+      ansible.builtin.apt:
+        name: caddy
+        state: present
+
+    # --- Web root ---
+    - name: Create web root directory
+      ansible.builtin.file:
+        path: /var/www/oilcloth.is
+        state: directory
+        owner: caddy
+        group: caddy
+        mode: "0755"
+
+    - name: Deploy placeholder index.html
+      ansible.builtin.copy:
+        dest: /var/www/oilcloth.is/index.html
+        content: |
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>oilcloth.is</title>
+            <style>
+              body { font-family: monospace; max-width: 40em; margin: 4em auto; padding: 0 1em; color: #222; }
+              h1 { font-size: 1.4em; }
+              p { line-height: 1.6; }
+            </style>
+          </head>
+          <body>
+            <h1>oilcloth.is</h1>
+            <p>Nothing to see here yet.</p>
+          </body>
+          </html>
+        owner: caddy
+        group: caddy
+        mode: "0644"
+
+    # --- Caddyfile ---
+    # Caddy sits behind cloudflared tunnel. No ACME needed — Cloudflare handles edge TLS.
+    # :80 block serves direct/Tailscale access and is the cloudflared upstream target.
+    # Domain block will be added when cloudflared tunnel is configured.
+    - name: Configure Caddyfile
+      ansible.builtin.copy:
+        dest: /etc/caddy/Caddyfile
+        content: |
+          :80 {
+              root * /var/www/{{ domain }}
+              file_server
+              encode gzip
+
+              header {
+                  X-Content-Type-Options "nosniff"
+                  X-Frame-Options "DENY"
+                  Referrer-Policy "no-referrer"
+                  Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; img-src 'self'"
+              }
+
+              log {
+                  output file /var/log/caddy/access.log
+              }
+          }
+        mode: "0644"
+      notify: Reload Caddy
+
+    - name: Ensure Caddy log directory exists
+      ansible.builtin.file:
+        path: /var/log/caddy
+        state: directory
+        owner: caddy
+        group: caddy
+        mode: "0755"
+
+    - name: Enable and start Caddy
+      ansible.builtin.systemd:
+        name: caddy
+        enabled: true
+        state: started
+
+  handlers:
+    - name: Reload Caddy
+      ansible.builtin.systemd:
+        name: caddy
+        state: reloaded

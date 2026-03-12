@@ -1,0 +1,16 @@
+// Uniqueness constraints on all node types
+CREATE CONSTRAINT person_slug IF NOT EXISTS FOR (p:Person) REQUIRE p.slug IS UNIQUE;
+CREATE CONSTRAINT person_id IF NOT EXISTS FOR (p:Person) REQUIRE p.id IS UNIQUE;
+CREATE CONSTRAINT organization_slug IF NOT EXISTS FOR (o:Organization) REQUIRE o.slug IS UNIQUE;
+CREATE CONSTRAINT organization_id IF NOT EXISTS FOR (o:Organization) REQUIRE o.id IS UNIQUE;
+CREATE CONSTRAINT incident_slug IF NOT EXISTS FOR (i:Incident) REQUIRE i.slug IS UNIQUE;
+CREATE CONSTRAINT incident_id IF NOT EXISTS FOR (i:Incident) REQUIRE i.id IS UNIQUE;
+CREATE CONSTRAINT source_slug IF NOT EXISTS FOR (s:Source) REQUIRE s.slug IS UNIQUE;
+CREATE CONSTRAINT source_id IF NOT EXISTS FOR (s:Source) REQUIRE s.id IS UNIQUE;
+CREATE CONSTRAINT flight_slug IF NOT EXISTS FOR (f:Flight) REQUIRE f.slug IS UNIQUE;
+CREATE CONSTRAINT flight_id IF NOT EXISTS FOR (f:Flight) REQUIRE f.id IS UNIQUE;
+CREATE CONSTRAINT facility_slug IF NOT EXISTS FOR (f:Facility) REQUIRE f.slug IS UNIQUE;
+CREATE CONSTRAINT facility_id IF NOT EXISTS FOR (f:Facility) REQUIRE f.id IS UNIQUE;
+CREATE CONSTRAINT political_actor_slug IF NOT EXISTS FOR (pa:PoliticalActor) REQUIRE pa.slug IS UNIQUE;
+CREATE CONSTRAINT political_actor_id IF NOT EXISTS FOR (pa:PoliticalActor) REQUIRE pa.id IS UNIQUE;
+CREATE CONSTRAINT migration_name IF NOT EXISTS FOR (m:__Migration) REQUIRE m.name IS UNIQUE

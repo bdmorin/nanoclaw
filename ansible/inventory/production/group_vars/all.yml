@@ -1,0 +1,5 @@
+---
+domain: oilcloth.is
+hostname: ops
+timezone: UTC
+oilcloth_ssh_pubkey_file: "{{ playbook_dir }}/../../.ssh/id_ed25519_oilcloth.pub"

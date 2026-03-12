@@ -141,7 +141,7 @@ export async function connectMatrix(config: MatrixConfig): Promise<sdk.MatrixCli
   // Initialize E2E encryption with Rust crypto backend
   try {
     await client.initRustCrypto({
-      useIndexedDB: true,
+      useIndexedDB: false, // Use SQLite on disk, not fake-indexeddb in-memory
       storagePassword: `nanoclaw-${config.deviceId}`,
       cryptoDatabasePrefix: config.storePath,
     });

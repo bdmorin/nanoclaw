@@ -238,18 +238,38 @@ export function getNewMessages(
 ): { messages: NewMessage[]; newTimestamp: string } {
   if (jids.length === 0) return { messages: [], newTimestamp: lastTimestamp };
 
-  const placeholders = jids.map(() => '?').join(',');
+  // Build WHERE clause: exact match for normal JIDs, LIKE for wildcard JIDs (e.g. "discourse::*")
+  const conditions: string[] = [];
+  const params: string[] = [lastTimestamp];
+
+  const exactJids = jids.filter(j => !j.endsWith('::*'));
+  const wildcardJids = jids.filter(j => j.endsWith('::*'));
+
+  if (exactJids.length > 0) {
+    conditions.push(`chat_jid IN (${exactJids.map(() => '?').join(',')})`);
+    params.push(...exactJids);
+  }
+  for (const wj of wildcardJids) {
+    const prefix = wj.slice(0, -1); // "discourse::*" → "discourse::"
+    conditions.push(`chat_jid LIKE ?`);
+    params.push(`${prefix}%`);
+  }
+
+  if (conditions.length === 0) return { messages: [], newTimestamp: lastTimestamp };
+
+  params.push(`${botPrefix}:%`);
+
   // Filter out bot's own messages by checking content prefix (not is_from_me, since user shares the account)
   const sql = `
     SELECT id, chat_jid, sender, sender_name, content, timestamp
     FROM messages
-    WHERE timestamp > ? AND chat_jid IN (${placeholders}) AND content NOT LIKE ?
+    WHERE timestamp > ? AND (${conditions.join(' OR ')}) AND content NOT LIKE ?
     ORDER BY timestamp
   `;
 
   const rows = db
     .prepare(sql)
-    .all(lastTimestamp, ...jids, `${botPrefix}:%`) as NewMessage[];
+    .all(...params) as NewMessage[];
 
   let newTimestamp = lastTimestamp;
   for (const row of rows) {
@@ -265,15 +285,36 @@ export function getMessagesSince(
   botPrefix: string,
 ): NewMessage[] {
   // Filter out bot's own messages by checking content prefix
+  // Support wildcard JIDs (e.g. "discourse::*" matches all "discourse::N")
+  let jidClause: string;
+  let jidParam: string;
+  if (chatJid.endsWith('::*')) {
+    jidClause = 'chat_jid LIKE ?';
+    jidParam = `${chatJid.slice(0, -1)}%`; // "discourse::*" → "discourse::%"
+  } else {
+    jidClause = 'chat_jid = ?';
+    jidParam = chatJid;
+  }
   const sql = `
     SELECT id, chat_jid, sender, sender_name, content, timestamp
     FROM messages
-    WHERE chat_jid = ? AND timestamp > ? AND content NOT LIKE ?
+    WHERE ${jidClause} AND timestamp > ? AND content NOT LIKE ?
     ORDER BY timestamp
   `;
   return db
     .prepare(sql)
-    .all(chatJid, sinceTimestamp, `${botPrefix}:%`) as NewMessage[];
+    .all(jidParam, sinceTimestamp, `${botPrefix}:%`) as NewMessage[];
+}
+
+/**
+ * Get distinct chat_jids matching a pattern (for wildcard JID expansion).
+ * e.g. "discourse::%" returns ["discourse::7", "discourse::12"]
+ */
+export function getDistinctChatJids(pattern: string, sinceTimestamp: string): string[] {
+  const rows = db
+    .prepare('SELECT DISTINCT chat_jid FROM messages WHERE chat_jid LIKE ? AND timestamp > ?')
+    .all(pattern, sinceTimestamp) as Array<{ chat_jid: string }>;
+  return rows.map(r => r.chat_jid);
 }
 
 export function createTask(

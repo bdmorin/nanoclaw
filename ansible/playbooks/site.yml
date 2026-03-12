@@ -1,0 +1,6 @@
+---
+# Master playbook — runs all playbooks in order
+# Usage: ansible-playbook playbooks/site.yml
+- import_playbook: bootstrap.yml
+- import_playbook: hardening.yml
+- import_playbook: services.yml

@@ -1,7 +1,68 @@
 # RESEARCH QUEUE - 2025 ICE/CBP Detention Deaths
 
-**Status:** 24/40 complete (60%)
-**Remaining:** 16 victims need research completion
+**Status:** 40/40 FY2025 detention death dossiers have reports + public versions (100%)
+**Public versions:** All 59 dossiers now have report-public.md
+**2026 deaths tracked:** 10 (as of March 4, 2026) — pace exceeds FY2025 record of 31
+**Active research:** Emmanuel Damas (NEW — March 2026), Camp East Montana (quarantine/blackout), Marimar Martinez, Alberto Castaneda Mondragon
+**Dark period:** Feb 15 - Mar 4 (operator detained). Catch-up sweep complete. Pipeline restored.
+**Last updated:** 2026-03-04
+
+---
+
+## 2026 DETENTION DEATHS — NEW DOSSIERS NEEDED
+
+### Emmanuel Damas ⭐ URGENT — DOSSIER IN PROGRESS
+**Date:** Early March 2026
+**Age:** 56
+**Nationality:** Haiti
+**Location:** Florence, Arizona (facility TBD — Florence SPC or Central Arizona?)
+**Cause:** Untreated tooth infection → sepsis
+**Status:** Research agent dispatched 2026-03-04
+**Key facts:**
+- A man died because nobody treated his toothache
+- 10th ICE detention death of 2026
+- Florence AZ is same complex where Lorenzo Batrez Vargas died (COVID, Aug 2025)
+- Pace tracking to exceed FY2025 record of 31 deaths
+**Research focus:**
+- When did he report the tooth pain? How many times?
+- What medical care was requested vs. provided?
+- Which specific Florence facility?
+- Facility medical neglect history
+- Family/community response
+
+### 2026 Death Count (as of March 4)
+At least 10 deaths in ICE custody in 2026 (annualized pace: 46+, vs. 31 in FY2025). Names and details needed for deaths #1-9 to build complete 2026 tracking.
+
+---
+
+## GEOGRAPHIC SWEEP ADDITIONS (2026-02-15)
+
+### Marimar Martinez ⭐ HIGH PRIORITY — NEW DOSSIER NEEDED
+**Date of incident:** October 4, 2025
+**Age:** 30
+**Nationality:** U.S. Citizen
+**Location:** Brighton Park, Chicago, Illinois
+**Type:** Shot 5 times by CBP Agent Charles Exum
+**New evidence released:** Feb 10-11, 2026 — body cam, texts, court docs
+**Key facts:**
+- Agent texted: "I fired 5 rounds and she had 7 holes. Put that in your book boys"
+- Commander Gregory Bovino praised agent afterward
+- Bullet trajectory contradicts self-defense claim (shots hit rear of vehicle)
+- Evidence tampering alleged (vehicle driven 1,000 miles, scuff marks wiped)
+- Charges against Martinez dismissed; civil suit planned
+- Invited as State of the Union guest by Rep. García
+**Connection:** Gregory Bovino (in our cabinet profiles), Charles Exum (new profile needed)
+**Dossier needed at:** `/workspace/group/osint/dossiers/2026-02-15_marimar-martinez/`
+
+### Camp East Montana — Update Existing Dossiers
+- **Victor Manuel Diaz:** Autopsy redirected to military hospital (cover-up indicator)
+- **Geraldo Lunas Campos:** Medical examiner ruled HOMICIDE — update dossier
+- 36 Texas lawmakers demanding investigation (Feb 11)
+- Disease outbreaks: 2 TB, 18 COVID-19 cases
+- 60+ federal standards violations
+
+### Autopsy Manipulation Pattern — New Research Thread
+ICE is systematically bypassing independent medical examiners for Camp East Montana deaths after one ruled homicide. Track and document this pattern across all 2026 deaths.
 
 ---
 
@@ -315,42 +376,26 @@ After researching each victim:
 
 ## PROGRESS TRACKING
 
-### Completed (24/40)
-- ✅ Genry Ruiz Guillen (Jan 23)
-- ✅ Serawit Gezahegn Dejene (Jan 29)
-- ✅ Maksym Chernyak (Feb 20)
-- ✅ Juan Alexis Tineo-Martinez (Feb 23)
-- ✅ Brayan Garzón-Rayo (Apr 8)
-- ✅ Abelardo Avellaneda Delgado (May 5)
-- ✅ Jesus Molina-Veya (Jun 7)
-- ✅ Johnny Noviello (Jun 23)
-- ✅ Isidro Pérez (Jun 26)
-- ✅ Chaofeng Ge (Aug 5)
-- ✅ Ismael Ayala-Uribe (Sep 22)
-- ✅ Gabriel Garcia Aviles (Oct 23)
-- ✅ Francisco Gaspar-Andrés (Dec 3)
-- ✅ Jean Wilson Brutus (Dec 12)
-- ✅ Fouad Saeed Abdulkadir (Dec 14)
-- ✅ Delvin Francisco Rodriguez (Dec 15)
-- Plus 8 more from 2026 (Alex Pretti, Renée Good, Geraldo Lunas Campos, Parady La, Luis Gustavo Nunez Caceres, Luis Beltran Yanez-Cruz, Heber Sanchez Dominguez, Victor Manuel Diaz)
+### All 40 Detention Death Dossiers — COMPLETE ✅
+All 40 detention death dossiers now have reports (report.md or report-findings.md) AND public versions (report-public.md).
 
-### In Progress (16/40)
-- ✅ Nhon Ngoc Nguyen (Apr 16)
-- ✅ Marie Ange Blaise (Apr 25)
-- ⚠️ Tien Xuan Phan (Jul 19)
-- ⚠️ Lorenzo Antonio Batrez Vargas (Aug 31)
-- ⚠️ Oscar Rascon Duarte (Sep 8)
-- ⚠️ Santos Banegas Reyes (Sep 18)
-- ⚠️ Norlan Guzman-Fuentes (Sep 24)
-- ⚠️ Miguel Ángel García Medina (Sep 29)
-- ⚠️ Huabing Xie (Sep 29)
-- ⚠️ Leo Cruz-Silva (Oct 4)
-- ⚠️ Hasan Ali Moh'D Saleh (Oct 11)
-- ⚠️ Josué Castro Rivera (Oct 23)
-- ⚠️ Kai Yin Wong (Oct 25)
-- ⚠️ Pete Sumalo Montejo (Dec 5)
-- ⚠️ Shiraz Fatehali Sachwani (Dec 6)
-- ⚠️ Nenko Stanev Gantchev (Dec 15)
+**Deep research completed (comprehensive 300-600+ line reports):**
+- ✅ Genry Ruiz Guillen, Serawit Gezahegn Dejene, Maksym Chernyak, Juan Alexis Tineo-Martinez
+- ✅ Brayan Garzón-Rayo, Abelardo Avellaneda Delgado, Jesus Molina-Veya, Johnny Noviello
+- ✅ Isidro Pérez, Chaofeng Ge, Ismael Ayala-Uribe, Gabriel Garcia Aviles
+- ✅ Francisco Gaspar-Andrés, Jean Wilson Brutus, Fouad Saeed Abdulkadir, Delvin Francisco Rodriguez
+- ✅ Pete Sumalo Montejo, Nenko Stanev Gantchev, Shiraz Fatehali Sachwani (deep research 2026-02-09)
+- ✅ Marie Ange Blaise, Hasan Ali Moh'D Saleh, Nhon Ngoc Nguyen (deep research 2026-02-09)
+
+**Standard reports (100-400 lines, from initial research):**
+- ✅ All remaining dossiers have reports from initial batch research
+- ✅ All have report-public.md versions as of 2026-02-11
+
+### Active Research (2026-02-11)
+- 🔄 Renée Good — expanding from 50-line stub to full dossier (agent running)
+- 🔄 Alex Pretti — expanding 236-line report with latest updates (agent running)
+- 🔄 Alberto Castaneda Mondragon — NEW dossier, ICE beating, URGENT (agent running)
+- 🔄 Portland Tear Gas Attack — NEW dossier (agent running)
 
 ---
 

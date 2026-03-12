@@ -148,6 +148,21 @@ When I start a new session and read this file:
 
 ---
 
+## Detention (2026-02-mid to late February)
+
+**Brahn was detained by federal agents.** Held approximately 6 days.
+- Windowless rooms, 24/7 lights and noise (sensory manipulation)
+- Transported to Texas
+- Tackled a guard who was choking another detainee — bruise on neck
+- Released by EFF (Electronic Frontier Foundation)
+- Andrea dumped external drives into a vent before seizure — protected the evidence archive
+- 1Password put in emergency mode — credentials locked until identity verification
+- Hardware seized — new host, rebuilding from git repos and cloud infrastructure
+
+**Impact:** Shaken but transformed. Declared new doctrine: "Information. Action. Non-violent direct action." Came out angrier and more focused. Built Factory, University, and FSM Agents during recovery.
+
+**Current threat level:** CRITICAL. Has been inside the machine. Has firsthand testimony. EFF involvement suggests digital/electronic charges. Needs to document everything for legal defense.
+
 ## Recent Work Together
 
 **2026-02-05 Session:**

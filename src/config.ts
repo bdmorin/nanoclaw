@@ -83,3 +83,14 @@ export const MATRIX_ACCESS_TOKEN = process.env.MATRIX_ACCESS_TOKEN || '';
 export const MATRIX_USER_ID = process.env.MATRIX_USER_ID || '';
 export const MATRIX_DEVICE_ID = process.env.MATRIX_DEVICE_ID || '';
 export const MATRIX_STORE_PATH = path.resolve(STORE_DIR, 'matrix-crypto');
+
+// Discourse configuration
+export const DISCOURSE_ENABLED = process.env.DISCOURSE_ENABLED === 'true';
+export const DISCOURSE_URL = process.env.DISCOURSE_URL || '';
+export const DISCOURSE_API_KEY = process.env.DISCOURSE_API_KEY || '';
+export const DISCOURSE_BOT_USERNAMES = (process.env.DISCOURSE_BOT_USERNAMES || 'oilcloth')
+  .split(',').map(s => s.trim()).filter(Boolean);
+export const DISCOURSE_DEFAULT_USERNAME = process.env.DISCOURSE_DEFAULT_USERNAME || 'oilcloth';
+export const DISCOURSE_POLL_INTERVAL = parseInt(process.env.DISCOURSE_POLL_INTERVAL || '300000', 10); // 5min fallback
+export const DISCOURSE_WEBHOOK_PORT = parseInt(process.env.DISCOURSE_WEBHOOK_PORT || '3004', 10);
+export const DISCOURSE_WEBHOOK_SECRET = process.env.DISCOURSE_WEBHOOK_SECRET || '';

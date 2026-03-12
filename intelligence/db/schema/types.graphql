@@ -1,0 +1,279 @@
+type Person {
+  id: ID! @id
+  slug: String! @unique
+  full_name: String
+  known_aliases: [String]
+  role: String
+  badge_number: String
+  employee_id: String
+  agency_id: String
+  physical_description: String
+  notes: String
+  status: PersonStatus
+  created_at: DateTime @timestamp(operations: [CREATE])
+  updated_at: DateTime @timestamp(operations: [UPDATE])
+
+  affiliated_with: [Organization!]!
+    @relationship(
+      type: "AFFILIATED_WITH"
+      direction: OUT
+      properties: "AffiliationProperties"
+    )
+  involved_in: [Incident!]!
+    @relationship(
+      type: "INVOLVED_IN"
+      direction: OUT
+      properties: "AssertionProperties"
+    )
+  identified_by: [Source!]!
+    @relationship(
+      type: "IDENTIFIED_BY"
+      direction: OUT
+      properties: "AssertionProperties"
+    )
+  detained_at: [Facility!]!
+    @relationship(
+      type: "DETAINED_AT"
+      direction: OUT
+      properties: "DetentionProperties"
+    )
+}
+
+type Organization {
+  id: ID! @id
+  slug: String! @unique
+  name: String!
+  abbreviation: String
+  org_type: OrgType
+  jurisdiction: String
+  parent_org_id: String
+  budget_line: String
+  notes: String
+  created_at: DateTime @timestamp(operations: [CREATE])
+  updated_at: DateTime @timestamp(operations: [UPDATE])
+
+  parent_organization: Organization
+    @relationship(type: "SUBSIDIARY_OF", direction: OUT)
+  subsidiary_organizations: [Organization!]!
+    @relationship(type: "SUBSIDIARY_OF", direction: IN)
+  members: [Person!]!
+    @relationship(
+      type: "AFFILIATED_WITH"
+      direction: IN
+      properties: "AffiliationProperties"
+    )
+  involved_in: [Incident!]!
+    @relationship(
+      type: "RESPONSIBLE_FOR"
+      direction: OUT
+      properties: "AssertionProperties"
+    )
+  operates: [Facility!]!
+    @relationship(
+      type: "OPERATES"
+      direction: OUT
+      properties: "AssertionProperties"
+    )
+}
+
+type Incident {
+  id: ID! @id
+  slug: String! @unique
+  incident_type: IncidentType
+  title: String
+  description: String
+  occurred_at: DateTime
+  occurred_at_precision: DatePrecision
+  location_name: String
+  location_lat: Float
+  location_lon: Float
+  victim_count: Int
+  status: IncidentStatus
+  created_at: DateTime @timestamp(operations: [CREATE])
+  updated_at: DateTime @timestamp(operations: [UPDATE])
+
+  subjects: [Person!]!
+    @relationship(
+      type: "INVOLVED_IN"
+      direction: IN
+      properties: "AssertionProperties"
+    )
+  responsible_orgs: [Organization!]!
+    @relationship(
+      type: "RESPONSIBLE_FOR"
+      direction: IN
+      properties: "AssertionProperties"
+    )
+  sourced_from: [Source!]!
+    @relationship(
+      type: "SOURCED_FROM"
+      direction: OUT
+      properties: "AssertionProperties"
+    )
+  occurred_at_facility: Facility
+    @relationship(type: "OCCURRED_AT", direction: OUT)
+}
+
+type Source {
+  id: ID! @id
+  slug: String! @unique
+  source_type: SourceType
+  title: String
+  url: String
+  archive_url: String
+  publication_date: DateTime
+  author: String
+  outlet: String
+  reliability: SourceReliability
+  obtained_by: String
+  file_path: String
+  notes: String
+  hash: String
+  created_at: DateTime @timestamp(operations: [CREATE])
+  updated_at: DateTime @timestamp(operations: [UPDATE])
+}
+
+type Flight {
+  id: ID! @id
+  slug: String! @unique
+  tail_number: String
+  flight_number: String
+  operator: String
+  aircraft_type: String
+  origin: String
+  destination: String
+  departed_at: DateTime
+  arrived_at: DateTime
+  passenger_count: Int
+  charter_contractor: String
+  notes: String
+  created_at: DateTime @timestamp(operations: [CREATE])
+  updated_at: DateTime @timestamp(operations: [UPDATE])
+
+  contracted_by: [Organization!]!
+    @relationship(
+      type: "CONTRACTED_BY"
+      direction: OUT
+      properties: "AssertionProperties"
+    )
+  related_incidents: [Incident!]!
+    @relationship(type: "RELATED_TO", direction: IN)
+  sourced_from: [Source!]!
+    @relationship(
+      type: "SOURCED_FROM"
+      direction: OUT
+      properties: "AssertionProperties"
+    )
+}
+
+type Facility {
+  id: ID! @id
+  slug: String! @unique
+  name: String!
+  common_names: [String]
+  facility_type: FacilityType
+  address: String
+  location_name: String
+  location_lat: Float
+  location_lon: Float
+  capacity: Int
+  current_population: Int
+  population_updated_at: DateTime
+  operator: String
+  contractor: String
+  status: FacilityStatus
+  opened_at: DateTime
+  closed_at: DateTime
+  notes: String
+  created_at: DateTime @timestamp(operations: [CREATE])
+  updated_at: DateTime @timestamp(operations: [UPDATE])
+
+  operated_by: [Organization!]!
+    @relationship(
+      type: "OPERATES"
+      direction: IN
+      properties: "AssertionProperties"
+    )
+  detained_persons: [Person!]!
+    @relationship(
+      type: "DETAINED_AT"
+      direction: IN
+      properties: "DetentionProperties"
+    )
+  incidents: [Incident!]!
+    @relationship(type: "OCCURRED_AT", direction: IN)
+  sourced_from: [Source!]!
+    @relationship(
+      type: "SOURCED_FROM"
+      direction: OUT
+      properties: "AssertionProperties"
+    )
+}
+
+type PoliticalActor {
+  id: ID! @id
+  slug: String! @unique
+  full_name: String!
+  title: String
+  party: String
+  jurisdiction: String
+  district: String
+  chamber: String
+  term_start: DateTime
+  term_end: DateTime
+  status: PoliticalStatus
+  contact_info: String
+  notes: String
+  created_at: DateTime @timestamp(operations: [CREATE])
+  updated_at: DateTime @timestamp(operations: [UPDATE])
+
+  affiliated_with: [Organization!]!
+    @relationship(
+      type: "AFFILIATED_WITH"
+      direction: OUT
+      properties: "AffiliationProperties"
+    )
+  involved_in: [Incident!]!
+    @relationship(
+      type: "INVOLVED_IN"
+      direction: OUT
+      properties: "AssertionProperties"
+    )
+  identified_by: [Source!]!
+    @relationship(
+      type: "IDENTIFIED_BY"
+      direction: OUT
+      properties: "AssertionProperties"
+    )
+}
+
+type AssertionProperties @relationshipProperties {
+  confidence: Float!
+  confidence_method: ConfidenceMethod!
+  sources: [String!]!
+  asserted_at: DateTime!
+  last_verified: DateTime
+  notes: String
+}
+
+type AffiliationProperties @relationshipProperties {
+  confidence: Float!
+  confidence_method: ConfidenceMethod!
+  sources: [String!]!
+  asserted_at: DateTime!
+  role: String
+  start_date: DateTime
+  end_date: DateTime
+  notes: String
+}
+
+type DetentionProperties @relationshipProperties {
+  confidence: Float!
+  confidence_method: ConfidenceMethod!
+  sources: [String!]!
+  asserted_at: DateTime!
+  admitted_at: DateTime
+  released_at: DateTime
+  detention_basis: String
+  notes: String
+}

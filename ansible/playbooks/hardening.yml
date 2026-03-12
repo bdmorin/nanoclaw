@@ -1,0 +1,44 @@
+---
+# CIS hardening via devsec.hardening collection
+# Run with --check first: ansible-playbook playbooks/hardening.yml --check
+# Then apply: ansible-playbook playbooks/hardening.yml
+# CRITICAL: Verify SSH still works after applying!
+- hosts: iceland
+  roles:
+    - devsec.hardening.os_hardening
+    - devsec.hardening.ssh_hardening
+  vars:
+    # SSH hardening
+    ssh_permit_root_login: "no"
+    ssh_password_authentication: false
+    ssh_max_auth_retries: 3
+    ssh_print_motd: true
+    ssh_x11_forwarding: false
+    ssh_permit_tunnel: "no"
+    ssh_allow_users: "oilcloth"
+    ssh_allow_tcp_forwarding: "no"
+    ssh_allow_agent_forwarding: "no"
+
+    # OS hardening
+    os_auditd_enabled: false  # Skip auditd on small VPS
+    os_desktop_enable: false
+    os_env_extra_user_paths: []
+    os_auth_pw_max_age: 99999
+    os_auth_retries: 3
+    os_security_users_allow: []
+    os_security_kernel_enable_module_loading: true
+
+    # Sysctl hardening
+    sysctl_overwrite:
+      net.ipv4.conf.all.accept_redirects: 0
+      net.ipv4.conf.default.accept_redirects: 0
+      net.ipv4.conf.all.send_redirects: 0
+      net.ipv4.conf.all.accept_source_route: 0
+      net.ipv4.conf.default.accept_source_route: 0
+      net.ipv4.conf.all.log_martians: 1
+      net.ipv4.conf.default.log_martians: 1
+      net.ipv4.icmp_echo_ignore_broadcasts: 1
+      net.ipv4.icmp_ignore_bogus_error_responses: 1
+      net.ipv4.tcp_syncookies: 1
+      net.ipv6.conf.all.disable_ipv6: 1
+      net.ipv6.conf.default.disable_ipv6: 1

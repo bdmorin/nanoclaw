@@ -1,0 +1,183 @@
+---
+# Bootstrap: SSH keys, base packages, firewall, fail2ban
+- hosts: iceland
+  tasks:
+    # --- SSH key ---
+    - name: Ensure oilcloth SSH key is authorized
+      ansible.posix.authorized_key:
+        user: oilcloth
+        key: "{{ lookup('file', oilcloth_ssh_pubkey_file) }}"
+        state: present
+
+    # --- Hostname ---
+    - name: Set hostname
+      ansible.builtin.hostname:
+        name: "{{ hostname }}"
+
+    - name: Set hostname in /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: '^127\.0\.1\.1'
+        line: "127.0.1.1 {{ hostname }}.{{ domain }} {{ hostname }}"
+        state: present
+
+    # --- Timezone ---
+    - name: Set timezone to UTC
+      community.general.timezone:
+        name: "{{ timezone }}"
+
+    # --- Base packages ---
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install base packages
+      ansible.builtin.apt:
+        name:
+          - ufw
+          - fail2ban
+          - curl
+          - git
+          - htop
+          - unattended-upgrades
+          - apt-listchanges
+          - python3
+          - python3-apt
+          - needrestart
+        state: present
+
+    # --- Unattended upgrades (security only) ---
+    - name: Configure unattended-upgrades
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/50unattended-upgrades
+        content: |
+          Unattended-Upgrade::Allowed-Origins {
+              "${distro_id}:${distro_codename}-security";
+          };
+          Unattended-Upgrade::AutoFixInterruptedDpkg "true";
+          Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+          Unattended-Upgrade::Remove-Unused-Dependencies "true";
+          Unattended-Upgrade::Automatic-Reboot "false";
+        mode: "0644"
+
+    - name: Enable automatic updates
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Unattended-Upgrade "1";
+          APT::Periodic::Download-Upgradeable-Packages "1";
+          APT::Periodic::AutocleanInterval "7";
+        mode: "0644"
+
+    # --- UFW firewall ---
+    - name: Set UFW default deny incoming
+      community.general.ufw:
+        direction: incoming
+        default: deny
+
+    - name: Set UFW default allow outgoing
+      community.general.ufw:
+        direction: outgoing
+        default: allow
+
+    - name: Allow SSH (port 22)
+      community.general.ufw:
+        rule: allow
+        port: "22"
+        proto: tcp
+
+    - name: Allow HTTP (port 80)
+      community.general.ufw:
+        rule: allow
+        port: "80"
+        proto: tcp
+
+    - name: Allow HTTPS (port 443)
+      community.general.ufw:
+        rule: allow
+        port: "443"
+        proto: tcp
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+
+    # --- fail2ban ---
+    - name: Configure fail2ban SSH jail
+      ansible.builtin.copy:
+        dest: /etc/fail2ban/jail.local
+        content: |
+          [DEFAULT]
+          bantime = 3600
+          findtime = 600
+          maxretry = 3
+          backend = systemd
+
+          [sshd]
+          enabled = true
+          port = ssh
+          filter = sshd
+          maxretry = 3
+          bantime = 3600
+        mode: "0644"
+      notify: Restart fail2ban
+
+    - name: Enable and start fail2ban
+      ansible.builtin.systemd:
+        name: fail2ban
+        enabled: true
+        state: started
+
+    # --- Tailscale ---
+    - name: Add Tailscale GPG key
+      ansible.builtin.shell: |
+        curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg > /dev/null
+      args:
+        creates: /usr/share/keyrings/tailscale-archive-keyring.gpg
+
+    - name: Add Tailscale apt repository
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/tailscale.list
+        content: "deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/debian bookworm main\n"
+        mode: "0644"
+
+    - name: Install Tailscale
+      ansible.builtin.apt:
+        name: tailscale
+        state: present
+        update_cache: true
+
+    - name: Enable tailscaled service
+      ansible.builtin.systemd:
+        name: tailscaled
+        enabled: true
+        state: started
+
+    # --- Disable unused services ---
+    - name: Check for unnecessary services
+      ansible.builtin.command: systemctl list-unit-files {{ item }}.service
+      register: service_check
+      changed_when: false
+      failed_when: false
+      loop:
+        - bluetooth
+        - avahi-daemon
+        - cups
+
+    - name: Disable unnecessary services if present
+      ansible.builtin.systemd:
+        name: "{{ item.item }}"
+        enabled: false
+        state: stopped
+      when: item.rc == 0 and 'enabled' in item.stdout
+      loop: "{{ service_check.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+  handlers:
+    - name: Restart fail2ban
+      ansible.builtin.systemd:
+        name: fail2ban
+        state: restarted

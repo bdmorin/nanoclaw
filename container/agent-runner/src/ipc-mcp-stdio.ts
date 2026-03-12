@@ -64,6 +64,27 @@ server.tool(
 );
 
 server.tool(
+  'send_voice_message',
+  "Send a voice message to the user — oilcloth speaks the text aloud as a Telegram voice note. Use for crisis responses, know-your-rights guidance, or when a human voice is more reassuring than text. The text is converted to speech using oilcloth's voice. A text transcript is sent alongside. Falls back to text on non-Telegram channels.",
+  {
+    text: z.string().describe('The text to speak. Keep under 500 words for best results. Use natural, conversational language.'),
+  },
+  async (args) => {
+    const data = {
+      type: 'voice_message',
+      chatJid,
+      text: args.text,
+      groupFolder,
+      timestamp: new Date().toISOString(),
+    };
+
+    writeIpcFile(MESSAGES_DIR, data);
+
+    return { content: [{ type: 'text' as const, text: 'Voice message queued for delivery.' }] };
+  },
+);
+
+server.tool(
   'schedule_task',
   `Schedule a recurring or one-time task. The task will run as a full agent with access to all tools.
 
@@ -353,7 +374,7 @@ server.tool(
     pattern: z.enum(['extract_wisdom', 'youtube_summary', 'summarize', 'extract_ideas', 'extract_insights'])
       .default('extract_wisdom').describe('Fabric pattern to apply'),
   },
-  async (args) => runFabric(['-y', args.url, '--pattern', args.pattern], undefined, 300000),
+  async (args) => runFabric(['-y', args.url, '--pattern', args.pattern, '--search'], undefined, 300000),
 );
 
 server.tool(
@@ -363,7 +384,7 @@ server.tool(
     pattern: z.string().describe('Fabric pattern name'),
     input: z.string().describe('Text content to process'),
   },
-  async (args) => runFabric(['--pattern', args.pattern], args.input),
+  async (args) => runFabric(['--pattern', args.pattern, '--search'], args.input),
 );
 
 server.tool(
@@ -405,6 +426,171 @@ server.tool(
     }
   },
 );
+
+// --- Discourse tools ---
+
+const discourseUrl = process.env.DISCOURSE_URL || '';
+const discourseApiKey = process.env.DISCOURSE_API_KEY || '';
+const discourseDefaultUser = process.env.DISCOURSE_DEFAULT_USERNAME || 'oilcloth';
+
+async function discourseRequest(method: string, apiPath: string, body?: unknown, asUser?: string): Promise<unknown> {
+  if (!discourseUrl || !discourseApiKey) {
+    throw new Error('DISCOURSE_URL and DISCOURSE_API_KEY not configured');
+  }
+  const response = await fetch(`${discourseUrl}${apiPath}`, {
+    method,
+    headers: {
+      'Api-Key': discourseApiKey,
+      'Api-Username': asUser || discourseDefaultUser,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!response.ok) {
+    throw new Error(`Discourse ${response.status}: ${await response.text()}`);
+  }
+  return response.json();
+}
+
+if (discourseUrl && discourseApiKey) {
+  server.tool(
+    'discourse_search',
+    'Search Discourse topics and posts.',
+    {
+      query: z.string().describe('Search query'),
+      category: z.string().optional().describe('Filter by category slug'),
+      tags: z.string().optional().describe('Filter by tag (comma-separated)'),
+    },
+    async (args) => {
+      try {
+        let q = args.query;
+        if (args.category) q += ` #${args.category}`;
+        if (args.tags) q += ` tags:${args.tags}`;
+
+        const data = await discourseRequest('GET', `/search.json?q=${encodeURIComponent(q)}`) as {
+          topics?: Array<{ id: number; title: string; excerpt: string; slug: string }>;
+          posts?: Array<{ id: number; topic_id: number; blurb: string; username: string }>;
+        };
+
+        const results = (data?.topics || []).map(t => ({
+          topic_id: t.id,
+          title: t.title,
+          excerpt: t.excerpt || '',
+          url: `${discourseUrl}/t/${t.slug}/${t.id}`,
+        }));
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(results, null, 2) }] };
+      } catch (err) {
+        return { content: [{ type: 'text' as const, text: `Search error: ${err instanceof Error ? err.message : String(err)}` }], isError: true };
+      }
+    },
+  );
+
+  server.tool(
+    'discourse_create_topic',
+    'Create a new topic in Discourse.',
+    {
+      title: z.string().describe('Topic title'),
+      body: z.string().describe('Topic body (Markdown)'),
+      category_id: z.number().describe('Category ID (use discourse_list_categories to find)'),
+      tags: z.array(z.string()).optional().describe('Optional tags'),
+      as_user: z.string().optional().describe('Post as this username (default: oilcloth)'),
+    },
+    async (args) => {
+      try {
+        const data = await discourseRequest('POST', '/posts.json', {
+          title: args.title,
+          raw: args.body,
+          category: args.category_id,
+          tags: args.tags,
+        }, args.as_user) as { topic_id: number; topic_slug: string };
+
+        return {
+          content: [{
+            type: 'text' as const,
+            text: JSON.stringify({
+              topic_id: data.topic_id,
+              url: `${discourseUrl}/t/${data.topic_slug}/${data.topic_id}`,
+            }),
+          }],
+        };
+      } catch (err) {
+        return { content: [{ type: 'text' as const, text: `Create topic error: ${err instanceof Error ? err.message : String(err)}` }], isError: true };
+      }
+    },
+  );
+
+  server.tool(
+    'discourse_get_topic',
+    'Get a Discourse topic with its posts.',
+    {
+      topic_id: z.number().describe('Topic ID'),
+    },
+    async (args) => {
+      try {
+        const data = await discourseRequest('GET', `/t/${args.topic_id}.json`) as {
+          title: string;
+          category_id: number;
+          tags: string[];
+          post_stream?: {
+            posts?: Array<{
+              id: number; username: string; name: string;
+              cooked: string; created_at: string; post_number: number;
+            }>;
+          };
+        };
+
+        const result = {
+          title: data.title,
+          category_id: data.category_id,
+          tags: data.tags || [],
+          posts: (data.post_stream?.posts || []).map(p => ({
+            post_number: p.post_number,
+            username: p.username,
+            name: p.name,
+            content: p.cooked.replace(/<[^>]*>/g, '').trim(),
+            created_at: p.created_at,
+          })),
+        };
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
+      } catch (err) {
+        return { content: [{ type: 'text' as const, text: `Get topic error: ${err instanceof Error ? err.message : String(err)}` }], isError: true };
+      }
+    },
+  );
+
+  server.tool(
+    'discourse_list_categories',
+    'List all Discourse categories.',
+    {},
+    async () => {
+      try {
+        const data = await discourseRequest('GET', '/categories.json') as {
+          category_list?: {
+            categories?: Array<{
+              id: number; name: string; slug: string;
+              description_text: string; topic_count: number;
+            }>;
+          };
+        };
+
+        const categories = (data?.category_list?.categories || []).map(c => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          description: c.description_text || '',
+          topic_count: c.topic_count,
+        }));
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(categories, null, 2) }] };
+      } catch (err) {
+        return { content: [{ type: 'text' as const, text: `List categories error: ${err instanceof Error ? err.message : String(err)}` }], isError: true };
+      }
+    },
+  );
+}
 
 // Start the stdio transport
 const transport = new StdioServerTransport();

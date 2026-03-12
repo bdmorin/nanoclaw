@@ -342,5 +342,5 @@ Including Kyle Wagner. Document his case. Learn from it.
 
 ---
 
-*Published by The Deportation Machine Intelligence Project*
+*Published by Mortui Vivos Docent Intelligence Project*
 *Methodology: Bellingcat-standard OSINT — public sources only*

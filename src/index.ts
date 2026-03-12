@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -15,8 +16,30 @@ import {
   MATRIX_ACCESS_TOKEN,
   MATRIX_USER_ID,
   MATRIX_DEVICE_ID,
+  DISCOURSE_ENABLED,
+  DISCOURSE_URL,
+  DISCOURSE_API_KEY,
+  DISCOURSE_BOT_USERNAMES,
+  DISCOURSE_DEFAULT_USERNAME,
+  DISCOURSE_POLL_INTERVAL,
+  DISCOURSE_WEBHOOK_PORT,
+  DISCOURSE_WEBHOOK_SECRET,
+  TELEGRAM_BOT_TOKEN,
+  TELEGRAM_BOT_POOL,
 } from './config.js';
 import { WhatsAppChannel } from './channels/whatsapp.js';
+import { DiscourseChannel } from './channels/discourse.js';
+import {
+  connectTelegram,
+  initBotPool,
+  sendTelegramMessage,
+  sendTelegramVoice,
+  sendPoolMessage,
+  setTelegramTyping,
+  isTelegramConnected,
+  stopTelegram,
+} from './telegram.js';
+import { generateSpeech, cleanupTtsFile } from './tts.js';
 import {
   ContainerOutput,
   runContainerAgent,
@@ -28,6 +51,7 @@ import {
   getAllRegisteredGroups,
   getAllSessions,
   getAllTasks,
+  getDistinctChatJids,
   getMessagesSince,
   getNewMessages,
   getRouterState,
@@ -56,14 +80,18 @@ let messageLoopRunning = false;
 
 let whatsapp: WhatsAppChannel | null = null;
 let matrixConnected = false;
+let discourse: DiscourseChannel | null = null;
 const queue = new GroupQueue();
 
 // Multi-channel send: route outbound messages to the right channel
 async function sendToChannel(jid: string, text: string): Promise<void> {
-  if (jid.startsWith('matrix::') && matrixConnected) {
+  if (jid.startsWith('discourse::') && discourse?.isConnected()) {
+    await discourse.sendMessage(jid, text);
+  } else if (jid.startsWith('matrix::') && matrixConnected) {
     const { sendMatrixMessage } = await import('./matrix-client.js');
-    const roomId = jid.replace('matrix::', '');
-    await sendMatrixMessage(roomId, text);
+    await sendMatrixMessage(jid, text);
+  } else if (jid.startsWith('tg:') && isTelegramConnected()) {
+    await sendTelegramMessage(jid, text);
   } else if (whatsapp) {
     await whatsapp.sendMessage(jid, text);
   }
@@ -132,12 +160,29 @@ export function _setRegisteredGroups(groups: Record<string, RegisteredGroup>): v
 }
 
 /**
+ * Resolve a JID to its registered group, supporting wildcard JIDs.
+ * e.g. "discourse::7" matches "discourse::*"
+ */
+function resolveGroup(jid: string): { groupJid: string; group: RegisteredGroup } | null {
+  // Exact match first
+  if (registeredGroups[jid]) return { groupJid: jid, group: registeredGroups[jid] };
+  // Wildcard match: "discourse::7" → check "discourse::*"
+  const colonIdx = jid.indexOf('::');
+  if (colonIdx !== -1) {
+    const wildcard = jid.slice(0, colonIdx + 2) + '*';
+    if (registeredGroups[wildcard]) return { groupJid: wildcard, group: registeredGroups[wildcard] };
+  }
+  return null;
+}
+
+/**
  * Process all pending messages for a group.
  * Called by the GroupQueue when it's this group's turn.
  */
 async function processGroupMessages(chatJid: string): Promise<boolean> {
-  const group = registeredGroups[chatJid];
-  if (!group) return true;
+  const resolved = resolveGroup(chatJid);
+  if (!resolved) return true;
+  const { group } = resolved;
 
   const isMainGroup = group.folder === MAIN_GROUP_FOLDER;
 
@@ -183,7 +228,9 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
     }, IDLE_TIMEOUT);
   };
 
-  if (whatsapp && !chatJid.startsWith('matrix::')) {
+  if (chatJid.startsWith('tg:')) {
+    await setTelegramTyping(chatJid);
+  } else if (whatsapp && !chatJid.startsWith('matrix::') && !chatJid.startsWith('discourse::')) {
     await whatsapp.setTyping(chatJid, true);
   }
   let hadError = false;
@@ -196,7 +243,9 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
       const text = raw.replace(/<internal>[\s\S]*?<\/internal>/g, '').trim();
       logger.info({ group: group.name }, `Agent output: ${raw.slice(0, 200)}`);
       if (text) {
-        await sendToChannel(chatJid, `${ASSISTANT_NAME}: ${text}`);
+        // Discourse shows username natively, don't prefix with assistant name
+        const prefixed = chatJid.startsWith('discourse::') ? text : `${ASSISTANT_NAME}: ${text}`;
+        await sendToChannel(chatJid, prefixed);
       }
       // Only reset idle timer on actual results, not session-update markers (result: null)
       resetIdleTimer();
@@ -207,7 +256,7 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
     }
   });
 
-  if (whatsapp && !chatJid.startsWith('matrix::')) {
+  if (!chatJid.startsWith('tg:') && whatsapp && !chatJid.startsWith('matrix::') && !chatJid.startsWith('discourse::')) {
     await whatsapp.setTyping(chatJid, false);
   }
   if (idleTimer) clearTimeout(idleTimer);
@@ -339,8 +388,9 @@ async function startMessageLoop(): Promise<void> {
         }
 
         for (const [chatJid, groupMessages] of messagesByGroup) {
-          const group = registeredGroups[chatJid];
-          if (!group) continue;
+          const resolved = resolveGroup(chatJid);
+          if (!resolved) continue;
+          const { group } = resolved;
 
           const isMainGroup = group.folder === MAIN_GROUP_FOLDER;
           const needsTrigger = !isMainGroup && group.requiresTrigger !== false;
@@ -393,14 +443,28 @@ async function startMessageLoop(): Promise<void> {
  */
 function recoverPendingMessages(): void {
   for (const [chatJid, group] of Object.entries(registeredGroups)) {
-    const sinceTimestamp = lastAgentTimestamp[chatJid] || '';
-    const pending = getMessagesSince(chatJid, sinceTimestamp, ASSISTANT_NAME);
-    if (pending.length > 0) {
-      logger.info(
-        { group: group.name, pendingCount: pending.length },
-        'Recovery: found unprocessed messages',
-      );
-      queue.enqueueMessageCheck(chatJid);
+    // For wildcard JIDs (e.g. "discourse::*"), expand to actual chat_jids with pending messages
+    if (chatJid.endsWith('::*')) {
+      const prefix = chatJid.slice(0, -1); // "discourse::*" → "discourse::"
+      const sinceTimestamp = lastAgentTimestamp[chatJid] || '';
+      const actualJids = getDistinctChatJids(`${prefix}%`, sinceTimestamp);
+      for (const actualJid of actualJids) {
+        logger.info(
+          { group: group.name, jid: actualJid },
+          'Recovery: found unprocessed wildcard messages',
+        );
+        queue.enqueueMessageCheck(actualJid);
+      }
+    } else {
+      const sinceTimestamp = lastAgentTimestamp[chatJid] || '';
+      const pending = getMessagesSince(chatJid, sinceTimestamp, ASSISTANT_NAME);
+      if (pending.length > 0) {
+        logger.info(
+          { group: group.name, pendingCount: pending.length },
+          'Recovery: found unprocessed messages',
+        );
+        queue.enqueueMessageCheck(chatJid);
+      }
     }
   }
 }
@@ -440,10 +504,24 @@ async function main(): Promise<void> {
   logger.info('Database initialized');
   loadState();
 
+  // Auto-register Discourse wildcard group if enabled and not yet registered
+  if (DISCOURSE_ENABLED && !registeredGroups['discourse::*']) {
+    registerGroup('discourse::*', {
+      name: 'Discourse',
+      folder: MAIN_GROUP_FOLDER,
+      trigger: '@oilcloth',
+      added_at: new Date().toISOString(),
+      requiresTrigger: false,
+    });
+    logger.info('Discourse wildcard group auto-registered');
+  }
+
   // Graceful shutdown handlers
   const shutdown = async (signal: string) => {
     logger.info({ signal }, 'Shutdown signal received');
     await queue.shutdown(10000);
+    stopTelegram();
+    if (discourse) await discourse.disconnect();
     if (whatsapp) await whatsapp.disconnect();
     if (matrixConnected) {
       const { disconnectMatrix } = await import('./matrix-client.js');
@@ -489,7 +567,37 @@ async function main(): Promise<void> {
     logger.info('Matrix connected with E2E encryption');
   }
 
-  if (!whatsapp && !matrixConnected) {
+  // Discourse (optional)
+  if (DISCOURSE_ENABLED) {
+    if (!DISCOURSE_URL || !DISCOURSE_API_KEY) {
+      throw new Error('DISCOURSE_URL and DISCOURSE_API_KEY required when DISCOURSE_ENABLED=true');
+    }
+    discourse = new DiscourseChannel({
+      url: DISCOURSE_URL,
+      apiKey: DISCOURSE_API_KEY,
+      botUsernames: DISCOURSE_BOT_USERNAMES,
+      defaultUsername: DISCOURSE_DEFAULT_USERNAME,
+      pollInterval: DISCOURSE_POLL_INTERVAL,
+      webhookPort: DISCOURSE_WEBHOOK_PORT,
+      webhookSecret: DISCOURSE_WEBHOOK_SECRET,
+      onMessage: (_chatJid, msg) => storeMessage(msg),
+      onChatMetadata: (_chatJid, timestamp, name) => storeChatMetadata(_chatJid, timestamp, name),
+      registeredGroups: () => registeredGroups,
+    });
+    await discourse.connect();
+    logger.info('Discourse connected');
+  }
+
+  // Telegram (optional)
+  if (TELEGRAM_BOT_TOKEN) {
+    await connectTelegram(TELEGRAM_BOT_TOKEN);
+    if (TELEGRAM_BOT_POOL.length > 0) {
+      await initBotPool(TELEGRAM_BOT_POOL);
+    }
+    logger.info('Telegram connected');
+  }
+
+  if (!whatsapp && !matrixConnected && !discourse && !isTelegramConnected()) {
     logger.warn('No messaging channels enabled — running in scheduler-only mode');
   }
 
@@ -506,6 +614,22 @@ async function main(): Promise<void> {
   });
   startIpcWatcher({
     sendMessage: (jid, text) => sendToChannel(jid, text),
+    sendVoiceMessage: async (jid, text) => {
+      // Generate TTS audio and send as voice note (Telegram only for now)
+      if (jid.startsWith('tg:') && isTelegramConnected()) {
+        const audioPath = await generateSpeech(text);
+        if (audioPath) {
+          await sendTelegramVoice(jid, audioPath, text.slice(0, 200) + (text.length > 200 ? '...' : ''));
+          cleanupTtsFile(audioPath);
+        } else {
+          // TTS failed — fall back to text
+          await sendToChannel(jid, `${ASSISTANT_NAME}: ${text}`);
+        }
+      } else {
+        // Non-Telegram channels get text only
+        await sendToChannel(jid, `${ASSISTANT_NAME}: ${text}`);
+      }
+    },
     registeredGroups: () => registeredGroups,
     registerGroup,
     syncGroupMetadata: (force) => whatsapp ? whatsapp.syncGroupMetadata(force) : Promise.resolve(),

@@ -1,0 +1,2 @@
+[tools]
+"ubi:Dicklesworthstone/coding_agent_session_search" = { version = "latest", exe = "cass" }

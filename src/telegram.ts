@@ -1,3 +1,5 @@
+import fs from 'fs';
+import { InputFile } from 'grammy';
 import { Api, Bot } from 'grammy';
 import {
   ASSISTANT_NAME,
@@ -211,6 +213,32 @@ export async function setTelegramTyping(chatId: string): Promise<void> {
     await bot.api.sendChatAction(numericId, 'typing');
   } catch (err) {
     logger.debug({ chatId, err }, 'Failed to send Telegram typing indicator');
+  }
+}
+
+/**
+ * Send a voice message (OGG/Opus file) to a Telegram chat.
+ * Optionally sends the text as a follow-up message for reference.
+ */
+export async function sendTelegramVoice(
+  chatId: string,
+  audioPath: string,
+  caption?: string,
+): Promise<void> {
+  if (!bot) {
+    logger.warn('Telegram bot not initialized, cannot send voice');
+    return;
+  }
+
+  try {
+    const numericId = chatId.replace(/^tg:/, '');
+    const fileStream = fs.createReadStream(audioPath);
+    await bot.api.sendVoice(numericId, new InputFile(fileStream), {
+      caption: caption ? caption.slice(0, 1024) : undefined,
+    });
+    logger.info({ chatId }, 'Telegram voice message sent');
+  } catch (err) {
+    logger.error({ chatId, err }, 'Failed to send Telegram voice message');
   }
 }
 
